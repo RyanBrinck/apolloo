@@ -7,6 +7,84 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+.title {
+  background-color: #20508a;
+  font-size: 12px;
+  color: white;
+  margin: 4px;
+  padding: 7px 12px;
+  border-radius: 16px;
+  min-height: 32px;
+  font-weight: 500;
+}
+
+.label {
+  background-color: #3b80d4;
+  font-size: 12px;
+  color: white;
+  margin: 4px;
+  display: inline-flex;
+  padding: 7px 12px;
+  border-radius: 16px;
+  align-items: center;
+  min-height: 32px;
+  height: 1px;
+  font-weight: 500;
+}
+
+.content_card {
+  min-width: 150px;
+  max-width: 280px;
+  max-height: 200px;
+  display: inline-block;
+  margin: 5px;
+}
+
+.time_card {
+  background-color: #d8e0e5;
+  color: black; 
+  border-radius: 16px;
+  padding: 7px;
+}
+
+.info_card {
+  background-color: #d8e0e5;
+  color: black;
+  border-radius: 16px;
+  padding: 7px;
+  display: inline-block; /* Change display to inline-block */
+  margin: 5px;
+  min-width: 180px;
+  max-width: 400px;
+}
+
+.bold_text {
+  font-weight: 500;
+}
+
+.text {
+  padding-left: 3px;
+}
+
+.content_wrapper {
+  display: inline-block;
+}
+
+.card_container {
+  padding: 10px;
+  margin: 5px;
+}
+
+.app_container {
+  display: flex;
+}
+
+.team_card {
+  margin: 5px;
+  min-width: 200px;
+  max-width: 500px;
+}
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
