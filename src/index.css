@@ -5,10 +5,11 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
 }
 
 .title {
-  background-color: #20508a;
+  background-color: #275894;
   font-size: 12px;
   color: white;
   margin: 4px;
@@ -30,6 +31,7 @@ body {
   min-height: 32px;
   height: 1px;
   font-weight: 500;
+  text-align: center;
 }
 
 .content_card {
@@ -38,6 +40,9 @@ body {
   max-height: 200px;
   display: inline-block;
   margin: 5px;
+  background-color: var(--highlight-bg);
+  color: var(--highlight-text-color);
+  border-radius: var(--border-radius)
 }
 
 .time_card {
@@ -73,17 +78,38 @@ body {
 .card_container {
   padding: 10px;
   margin: 5px;
+  background-color: white;
 }
 
 .app_container {
   display: flex;
+  background-color: white;
 }
 
 .team_card {
   margin: 5px;
   min-width: 200px;
   max-width: 500px;
+  text-align: center;
 }
+
+.Local_Storage {
+  margin: 5px;
+  min-width: 200px;
+  max-width: 500px;
+  text-align: center;
+  border-width: 1px;
+  border-color: black;
+}
+
+.Third_Box {
+  margin: 5px;
+  min-width: 200px;
+  max-width: 500px;
+  text-align: center;
+  border-color: black;
+}
+
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
