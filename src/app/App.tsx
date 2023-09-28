@@ -89,7 +89,7 @@ function App() {
     const hoursStr = hours < 10 ? "0" + hours : hours.toString();
     const minutesStr = remainingMinutes < 10 ? "0" + remainingMinutes : remainingMinutes.toString();
 
-    return hoursStr + ":" + minutesStr;
+    return hoursStr + ":" + minutesStr ;
   }
 
   function formatDate(dateString: string | null | undefined): string {
@@ -146,6 +146,28 @@ function App() {
     </div>
   );
 
+  const totalRefreshTime = responseData.data
+  ? responseData.data.data.data.reduce(
+      (sum: number, item: any) => sum + calculateRefreshTime(item),
+      0
+    )
+  : 0;
+
+  function calculateRefreshTime(dataItem: any): number {
+    if (dataItem.hasOwnProperty('adverts_id')) {
+      // For individual adverts
+      return dataItem.adverts_refresh_time || 0;
+    } else if (dataItem.hasOwnProperty('Adverts')) {
+      // For playlists
+      let refreshTime = 0;
+      for (const advert of dataItem.Adverts) {
+        refreshTime += advert.adverts_refresh_time || 0;
+      }
+      return refreshTime;
+    }
+    return 0;
+  }
+  
   return (
     <body>
       <Menubar model={items} end={end} /> {/* Render the Menubar */}
@@ -162,7 +184,7 @@ function App() {
               <div className="content-wrapper">
                 <div className="info_card">
                   <span className="bold_text">
-                    User ID:
+                    Client ID:
                   </span>
                   <span className="text">
                     {JSON.stringify(responseData.data.data.screen.user_screens_user_id, null, 2)}
@@ -201,9 +223,9 @@ function App() {
                     Last Sync:
                   </span>
                   <span className="text">
-                    {/* {JSON.stringify(responseData.data.data.screen.user_screens_last_sync, null, 2)} */
+                    {
                       responseData.data ? (
-                        formatDate(responseData.data.data.screen.user_screens_last_sync)
+                        formatDate(responseData.data.data.screen.user_screens_last_publish)
                       ) : (
                         "Loading..." // You can display a loading message here while data is being fetched
                       )
@@ -215,7 +237,7 @@ function App() {
                     Run Time:
                   </span>
                   <span className="text">
-                    {JSON.stringify(responseData.data.data.screen.screen_id, null, 2)}
+                    {minutesToHHMM(totalRefreshTime)}
                   </span>
                 </div>
               </div>
@@ -240,12 +262,23 @@ function App() {
                 <div style={{ background: '#275894', padding: '0.2rem', borderRadius: '70%', marginRight: '0.5rem' }}>
                   <i className="pi pi-database" style={{ fontSize: '1.5rem' }}></i>
                 </div>
-                <span>Third Box</span>
+                <span>Profile Data</span>
               </div>
               <div className="content-wrapper">
                 <div className="info_card">
                   <span className="bold_text">
-                    This is the third box we need
+                    Mute:
+                  </span>
+                  <span className="text">
+                    {responseData.data.data.profile.mute_audio === 1 ? 'Yes' : 'No'}
+                  </span>
+                </div>
+                <div className="info_card">
+                  <span className="bold_text">
+                    Audio Volume:
+                  </span>
+                  <span className="text">   
+                    {JSON.stringify(responseData.data.data.profile.audio_volume, null, 2)}
                   </span>
                 </div>
               </div>
@@ -269,13 +302,8 @@ function App() {
                   {dataItem.hasOwnProperty('adverts_id') ? 'Advert' : 'Playlist'}
                 </div>
                 <div className="time_card">
-                  Refresh Time: {minutesToHHMM(dataItem.adverts_refresh_time)} mins
+                    Run Time: {minutesToHHMM(calculateRefreshTime(dataItem))}
                 </div>
-                {dataItem.hasOwnProperty('imageURL') && (
-                  <div className="image-container">
-                    <img src={dataItem.imageURL} alt="" />
-                  </div>
-                )}
               </Card>
             ))
             }
@@ -293,14 +321,6 @@ function App() {
         onHide={() => setDisplayCalendar(false)}
         ref={calendarRef} // Assign the ref to the Dialog
       >
-        {/* <Calendar
-          value={[startDate, endDate]}
-          selectionMode="range"
-          inline
-          style={{ width: "50rem" }}
-          showWeek
-        />
-        <p>Put your calendar component here</p> */}
         <Calendar
           // showTime hourFormat="12"
           value={[earliestStartTime || startDate, latestEndTime || endDate]}
@@ -324,13 +344,13 @@ function App() {
 
       {/* Edit Dialog */}
       <Dialog
-        header="Edit this"
+        header="Keybinds"
         visible={showControlDialog}
         style={{ width: '30rem' }} // Adjust the width as needed
         onHide={() => setShowControlDialog(false)}
       >
         {/* Add your edit content here */}
-        <p>This is the edit dialog. You can add your edit form or content here.</p>
+        <p>R: Refresh the page</p>
       </Dialog>
     </body>
   );
