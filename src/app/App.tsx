@@ -177,7 +177,7 @@ function App() {
             <Card className="team_card">
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <div style={{ background: 'white', width: '2rem', height: '2rem', display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: '0.3rem', marginRight: '0.5rem', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>
-                  <i className="pi pi-bookmark-fill" style={{ fontSize: '1.5rem', color: '#275894' }}></i>
+                  <i className="pi pi-bookmark" style={{ fontSize: '1.5rem', color: '#275894' }}></i>
                 </div>
                 <span style={{ fontSize: '1.2rem' }}>2023: PX team</span>
               </div>
@@ -244,7 +244,7 @@ function App() {
             </Card>
             <Card className="Local_Storage">
               <div style={{ display: 'flex', alignItems: 'center' }}>
-                <div style={{ background: 'white', padding: '0.2rem', borderRadius: '70%', marginRight: '0.5rem' }}>
+                <div style={{ background: 'white', padding: '0.2rem', borderRadius: '0.3rem', marginRight: '0.5rem' }}>
                   <i className="pi pi-database" style={{ fontSize: '1.5rem', color: '#275894' }}></i>
                 </div>
                 <span style={{ fontSize: '1.2rem' }}>Local Storage</span>
@@ -286,15 +286,7 @@ function App() {
           </div>
           <div className="card_container">
             {responseData.data.data.data.map((dataItem: any, index: number) => (
-              <Card
-                className="content_card"
-                key={index}
-                style={{
-                  backgroundColor: 'var(--highlight-bg)',
-                  color: 'var(--highlight-text-color)',
-                  borderRadius: 'var(--border-radius)',
-                }}
-              >
+              <Card className="content_card" key={index} >
                 <div className="title">
                   {dataItem.hasOwnProperty('adverts_name') ? dataItem.adverts_name : dataItem.playlist_name}
                 </div>
