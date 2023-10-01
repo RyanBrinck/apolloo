@@ -3,10 +3,31 @@ import axios from 'axios';
 import "primereact/resources/themes/vela-blue/theme.css";
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
+import 'primeflex/primeflex.css';     
 import { Card } from 'primereact/card';
 import { Menubar } from 'primereact/menubar';
 import { Dialog } from 'primereact/dialog';
 import { Calendar } from 'primereact/calendar';
+import { DataView } from 'primereact/dataview';
+import { Tag } from 'primereact/tag';
+import { DataViewLayoutOptions } from 'primereact/dataview';
+import { Sidebar } from 'primereact/sidebar'; // Import Sidebar component
+import { Image } from 'primereact/image';
+import { faCalendarDays } from '@fortawesome/free-solid-svg-icons';
+import { faRotateRight } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'; // Import FontAwesomeIcon component
+
+
+interface DataItem {
+  adverts_id?: number;
+  adverts_name?: string;
+  playlist_name?: string;
+  adverts_start_time?: string;
+  adverts_end_time?: string;
+  adverts_file_name?: string;
+  adverts_file_name_unique?: string;
+  // ... add other properties as needed
+}
 
 interface ApiResponse {
   error: boolean;
@@ -25,6 +46,9 @@ function App() {
   const [latestEndTime, setLatestEndTime] = useState<Date | null>(null);
   const [isConnected, setIsConnected] = useState(navigator.onLine);
   const [showControlDialog, setShowControlDialog] = useState(false); // State for showing the edit dialog
+  const [selectedDataItem, setSelectedDataItem] = useState<DataItem | null>(null);
+  const [sidebarVisible, setSidebarVisible] = useState(false); // State for showing/hiding the sidebar
+  const [darkMode, setDarkMode] = useState(false); // State for dark mode
 
   //fetch data from api using axios
   useEffect(() => {
@@ -112,10 +136,10 @@ function App() {
     window.location.reload();
   };
 
-  const items = [
+ const items = [
     {
       label: 'Calendar',
-      icon: 'pi pi-calendar',
+      icon: <FontAwesomeIcon icon={faCalendarDays} />,
       command: () => {
         // Show the calendar when the calendar icon is clicked
         setDisplayCalendar(true);
@@ -123,15 +147,15 @@ function App() {
     },
     {
       label: 'Refresh',
-      icon: 'pi pi-refresh',
+      icon: <FontAwesomeIcon icon={faRotateRight} />,
       command: () => {
         // Refresh data when the refresh icon is clicked
         handleRefresh();
       },
 
     },
-
   ];
+
   const end = (
     <div>
       <i
@@ -167,6 +191,32 @@ function App() {
     }
     return 0;
   }
+  const itemTemplate = (dataItem: any) => {
+    return (
+      <div className="card_container" onClick={() => openSidebar(dataItem)}>
+        <div className="title">
+          {dataItem.hasOwnProperty('adverts_name') ? dataItem.adverts_name : dataItem.playlist_name}
+        </div>
+        <div className="label">
+          {dataItem.hasOwnProperty('adverts_id') ? 'Advert' : 'Playlist'}
+        </div>
+        <div className="time_card">
+          Run Time: {minutesToHHMM(calculateRefreshTime(dataItem))}
+        </div>
+        {/* <div className="index">
+                Index: {index}
+            </div> */}
+      </div>
+    );
+  }
+  const openSidebar = (dataItem: any) => {
+    setSelectedDataItem(dataItem);
+    setSidebarVisible(true);
+  };
+
+  const closeSidebar = () => {
+    setSidebarVisible(false);
+  };
 
   return (
     <body>
@@ -284,9 +334,17 @@ function App() {
               </div>
             </Card>
           </div>
-          <div className="card_container">
-            {responseData.data.data.data.map((dataItem: any, index: number) => (
-              <Card className="content_card" key={index} >
+          <div className="flex justify-content-end">
+            {/* {responseData.data.data.data.map((dataItem: any, index: number) => (
+              <Card
+                className="content_card"
+                key={index}
+                style={{
+                  backgroundColor: 'var(--highlight-bg)',
+                  color: 'var(--highlight-text-color)',
+                  borderRadius: 'var(--border-radius)',
+                }}
+              >
                 <div className="title">
                   {dataItem.hasOwnProperty('adverts_name') ? dataItem.adverts_name : dataItem.playlist_name}
                 </div>
@@ -294,11 +352,32 @@ function App() {
                   {dataItem.hasOwnProperty('adverts_id') ? 'Advert' : 'Playlist'}
                 </div>
                 <div className="time_card">
-                  Run Time: {minutesToHHMM(calculateRefreshTime(dataItem))}
+                    Run Time: {minutesToHHMM(calculateRefreshTime(dataItem))}
                 </div>
               </Card>
+              
             ))
-            }
+            } */}
+            {responseData.data && responseData.data.data ? (
+              <div>
+                {Array.isArray(responseData.data.data.data) && responseData.data.data.data.length > 0 ? (
+                  <DataView
+                    value={responseData.data.data.data}
+                    itemTemplate={itemTemplate}
+                    //layout='grid'
+                    style={{
+                      //display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                    }}
+                    className="p-dataview"
+                  />
+                ) : (
+                  <p>No data available</p>
+                )}
+              </div>
+            ) : (
+              <p>No data available</p>
+            )}
           </div>
         </div>
       ) : (
@@ -344,6 +423,55 @@ function App() {
         {/* Add your edit content here */}
         <p>R: Refresh the page</p>
       </Dialog>
+
+      <Sidebar
+        className='sideBar'
+        visible={sidebarVisible}
+        position="bottom"
+        onHide={closeSidebar}
+        style={{ height: '90vh' }} // Set the height inline
+
+      >
+        {selectedDataItem && (
+          <div className="sidebar-content">
+            {/* Render content for the sidebar based on the selectedDataItem */}
+            {/* Example: */}
+            <p>
+              Name: {selectedDataItem.adverts_id ? selectedDataItem.adverts_name : selectedDataItem.playlist_name}
+            </p>
+            {/* Display the image */}
+            {selectedDataItem.adverts_file_name && (
+              <Image
+                src={`/template/content/images/${selectedDataItem.adverts_file_name_unique}`} // Replace with the actual URL or path to your images
+                // alt={selectedDataItem.adverts_name || selectedDataItem.playlist_name}
+                style={{ maxWidth: '100%', maxHeight: '300px' }}
+              />
+            )}
+            {selectedDataItem.adverts_start_time && selectedDataItem.adverts_end_time && (
+              <div>
+                <Calendar
+                  value={[
+                    new Date(selectedDataItem.adverts_start_time),
+                    new Date(selectedDataItem.adverts_end_time)
+                  ]}
+                  selectionMode="range"
+                  inline
+                  style={{ width: '100%' }}
+                  showWeek
+                  numberOfMonths={1}
+                />
+                <p>
+                  Start Date: {selectedDataItem.adverts_start_time}
+                  <br />
+                  End Date: {selectedDataItem.adverts_end_time}
+                </p>
+              </div>
+            )}
+            {/* Add more data from selectedDataItem using optional chaining */}
+          </div>
+        )}
+      </Sidebar>
+
     </body>
   );
 }
