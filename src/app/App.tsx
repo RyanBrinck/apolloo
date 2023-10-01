@@ -89,7 +89,7 @@ function App() {
     const hoursStr = hours < 10 ? "0" + hours : hours.toString();
     const minutesStr = remainingMinutes < 10 ? "0" + remainingMinutes : remainingMinutes.toString();
 
-    return hoursStr + ":" + minutesStr ;
+    return hoursStr + ":" + minutesStr;
   }
 
   function formatDate(dateString: string | null | undefined): string {
@@ -147,11 +147,11 @@ function App() {
   );
 
   const totalRefreshTime = responseData.data
-  ? responseData.data.data.data.reduce(
+    ? responseData.data.data.data.reduce(
       (sum: number, item: any) => sum + calculateRefreshTime(item),
       0
     )
-  : 0;
+    : 0;
 
   function calculateRefreshTime(dataItem: any): number {
     if (dataItem.hasOwnProperty('adverts_id')) {
@@ -167,7 +167,7 @@ function App() {
     }
     return 0;
   }
-  
+
   return (
     <body>
       <Menubar model={items} end={end} /> {/* Render the Menubar */}
@@ -176,10 +176,10 @@ function App() {
           <div className="card_container">
             <Card className="team_card">
               <div style={{ display: 'flex', alignItems: 'center' }}>
-                <div style={{ background: '#275894', padding: '0.2rem', borderRadius: '70%', marginRight: '0.5rem' }}>
-                  <i className="pi pi-database" style={{ fontSize: '1.5rem' }}></i>
+                <div style={{ background: 'white', width: '2rem', height: '2rem', display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: '0.3rem', marginRight: '0.5rem', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>
+                  <i className="pi pi-bookmark" style={{ fontSize: '1.5rem', color: '#275894' }}></i>
                 </div>
-                <span>2023: PX Team</span>
+                <span style={{ fontSize: '1.2rem' }}>2023: PX team</span>
               </div>
               <div className="content-wrapper">
                 <div className="info_card">
@@ -244,10 +244,10 @@ function App() {
             </Card>
             <Card className="Local_Storage">
               <div style={{ display: 'flex', alignItems: 'center' }}>
-                <div style={{ background: '#275894', padding: '0.2rem', borderRadius: '70%', marginRight: '0.5rem' }}>
-                  <i className="pi pi-database" style={{ fontSize: '1.5rem' }}></i>
+                <div style={{ background: 'white', padding: '0.2rem', borderRadius: '0.3rem', marginRight: '0.5rem' }}>
+                  <i className="pi pi-database" style={{ fontSize: '1.5rem', color: '#275894' }}></i>
                 </div>
-                <span>Local Storage</span>
+                <span style={{ fontSize: '1.2rem' }}>Local Storage</span>
               </div>
               <div className="content-wrapper">
                 <div className="info_card">
@@ -259,10 +259,10 @@ function App() {
             </Card>
             <Card className="Third_Box" >
               <div style={{ display: 'flex', alignItems: 'center' }}>
-                <div style={{ background: '#275894', padding: '0.2rem', borderRadius: '70%', marginRight: '0.5rem' }}>
-                  <i className="pi pi-database" style={{ fontSize: '1.5rem' }}></i>
+                <div style={{ background: 'white', width: '2rem', height: '2rem', display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: '0.3rem', marginRight: '0.5rem', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>
+                  <i className="pi pi-inbox" style={{ fontSize: '1.5rem', color: '#275894' }}></i>
                 </div>
-                <span>Profile Data</span>
+                <span style={{ fontSize: '1.2rem' }}>Profile Data</span>
               </div>
               <div className="content-wrapper">
                 <div className="info_card">
@@ -277,7 +277,7 @@ function App() {
                   <span className="bold_text">
                     Audio Volume:
                   </span>
-                  <span className="text">   
+                  <span className="text">
                     {JSON.stringify(responseData.data.data.profile.audio_volume, null, 2)}
                   </span>
                 </div>
@@ -286,15 +286,7 @@ function App() {
           </div>
           <div className="card_container">
             {responseData.data.data.data.map((dataItem: any, index: number) => (
-              <Card
-                className="content_card"
-                key={index}
-                style={{
-                  backgroundColor: 'var(--highlight-bg)',
-                  color: 'var(--highlight-text-color)',
-                  borderRadius: 'var(--border-radius)',
-                }}
-              >
+              <Card className="content_card" key={index} >
                 <div className="title">
                   {dataItem.hasOwnProperty('adverts_name') ? dataItem.adverts_name : dataItem.playlist_name}
                 </div>
@@ -302,7 +294,7 @@ function App() {
                   {dataItem.hasOwnProperty('adverts_id') ? 'Advert' : 'Playlist'}
                 </div>
                 <div className="time_card">
-                    Run Time: {minutesToHHMM(calculateRefreshTime(dataItem))}
+                  Run Time: {minutesToHHMM(calculateRefreshTime(dataItem))}
                 </div>
               </Card>
             ))
