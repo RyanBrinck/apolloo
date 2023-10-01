@@ -3,10 +3,12 @@ import axios from 'axios';
 import "primereact/resources/themes/vela-blue/theme.css";
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
+import 'primeflex/primeflex.css';     
 import { Card } from 'primereact/card';
 import { Menubar } from 'primereact/menubar';
 import { Dialog } from 'primereact/dialog';
 import { Calendar } from 'primereact/calendar';
+
 
 interface ApiResponse {
   error: boolean;
