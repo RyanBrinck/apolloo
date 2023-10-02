@@ -220,7 +220,7 @@ function App() {
 
   return (
     <body>
-      <Menubar model={items} end={end} /> {/* Render the Menubar */}
+      <Menubar className="nav_bar" model={items} end={end} /> {/* Render the Menubar */}
       {responseData.data ? (
         <div className="app_container">
           <div className="card_container">
