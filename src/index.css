@@ -42,8 +42,14 @@ body {
   background-color: #d8e0e5;
   color: black;
   border-radius: 16px;
+  text-align: center;
+  width: 250px;
   padding: 7px;
   border: 1px solid rgb(105, 133, 206);
+}
+
+.inline {
+  display: inline-block;
 }
 
 .info_card {
@@ -72,6 +78,7 @@ body {
 .card_container {
   padding: 10px;
   margin: 5px;
+  min-width: 250px;
   background-color: rgba(255, 255, 255, 0);
 }
 

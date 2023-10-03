@@ -26,7 +26,18 @@ interface DataItem {
   adverts_end_time?: string;
   adverts_file_name?: string;
   adverts_file_name_unique?: string;
+  advert_playlist_id?: number; // Add this property if it's expected to exist
+  timeings?: Timeing[]; // Add the timeings array
   // ... add other properties as needed
+}
+
+interface Timeing {
+  adverts_schedule_starthour: number;
+  adverts_schedule_startmin: number;
+  adverts_schedule_endhour: number;
+  adverts_schedule_endmin: number;
+  adverts_schedule_days: string[];
+  // Add other properties for Timeing as needed
 }
 
 interface ApiResponse {
@@ -48,7 +59,52 @@ function App() {
   const [showControlDialog, setShowControlDialog] = useState(false); // State for showing the edit dialog
   const [selectedDataItem, setSelectedDataItem] = useState<DataItem | null>(null);
   const [sidebarVisible, setSidebarVisible] = useState(false); // State for showing/hiding the sidebar
-  const [darkMode, setDarkMode] = useState(false); // State for dark mode
+  const [selectedItemType, setSelectedItemType] = useState<string | null>(null);
+  const [overlayHistory, setOverlayHistory] = useState<DataItem[]>([]);
+
+  const goBackToPreviousOverlay = () => {
+    if (overlayHistory.length > 1) {
+      const updatedHistory = [...overlayHistory];
+      updatedHistory.pop(); // Remove the current overlay from history
+      setOverlayHistory(updatedHistory);
+
+      // Set the selected data item to the previous overlay's data
+      const previousDataItem = updatedHistory[updatedHistory.length - 1];
+      setSelectedDataItem(previousDataItem);
+
+      // Check if the current item type is "advert"
+      if (selectedItemType === "advert") {
+        // Find the parent playlist data
+        const parentPlaylistData = responseData.data.data.data.find(
+          (item: any) =>
+            item.advert_playlist_id === previousDataItem.advert_playlist_id
+        );
+
+        if (parentPlaylistData) {
+          // Update the current item type to "playlist"
+          setSelectedItemType("playlist");
+
+          // Open the parent playlist
+          setSelectedDataItem(parentPlaylistData);
+          setSidebarVisible(true); // Show the sidebar for the playlist
+        } else {
+          // No parent playlist found, so close all overlays
+          setOverlayHistory([]);
+          setSidebarVisible(false);
+          setSelectedDataItem(null);
+        }
+      } else if (selectedItemType === "playlist") { //because if it is a playlist, means only 1 overlay opened. i.e. no playlist inside of playlist 
+        // Close the current playlist sidebar
+        setSidebarVisible(false);
+        setSelectedDataItem(null);
+      }
+    } else {
+      // No previous overlay, so close all overlays
+      setOverlayHistory([]);
+      setSidebarVisible(false);
+      setSelectedDataItem(null);
+    }
+  };
 
   //fetch data from api using axios
   useEffect(() => {
@@ -56,6 +112,22 @@ function App() {
     const apiUrl = 'http://127.0.0.1:3000/load/dataJson';
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'R' || e.key === 'r') {
+        // Call the handleRefresh function when 'R' or 'r' is pressed
+        handleRefresh();
+      }
+      if (e.key === 'K' || e.key === 'k') {
+        // Open the keybind dialog when 'K' or 'k' is pressed
+        setShowControlDialog(true);
+      } else if (e.key === 'B' || e.key === 'b') {
+        // Handle the "b" key press by calling the goBackToPreviousOverlay function
+        goBackToPreviousOverlay();
+      }
+
+    };
+    window.addEventListener('keydown', handleKeyDown);
 
     // Make the GET request to the API using Axios
     axios.get(apiUrl)
@@ -89,10 +161,12 @@ function App() {
         setResponseData({ error: true, errorMsg: 'Error fetching data', data: null });
       });
     return () => {
+      window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+
   const handleOnline = () => {
     setIsConnected(true);
   };
@@ -195,14 +269,18 @@ function App() {
   const itemTemplate = (dataItem: any) => {
     return (
       <div className="card_container" onClick={() => openSidebar(dataItem)}>
-        <div className="title">
-          {dataItem.hasOwnProperty('adverts_name') ? dataItem.adverts_name : dataItem.playlist_name}
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <Tag className="label" style={{
+            backgroundColor: dataItem.hasOwnProperty('adverts_id') ? '' : 'orange',
+            color: 'white',
+            marginRight: '8px', // Add some spacing between label and title
+          }}>
+            {dataItem.hasOwnProperty('adverts_id') ? 'Advert' : 'Playlist'}
+          </Tag>
+          <div className="title">
+            {dataItem.hasOwnProperty('adverts_name') ? dataItem.adverts_name : dataItem.playlist_name}
+          </div>
         </div>
-        <Tag className="label" style={{
-          backgroundColor: dataItem.hasOwnProperty('adverts_id') ? '' : 'orange',
-          color: 'white'}}>
-          {dataItem.hasOwnProperty('adverts_id') ? 'Advert' : 'Playlist'}
-        </Tag>
         <div className="time_card">
           Run Time: {minutesToHHMM(calculateRefreshTime(dataItem))}
         </div>
@@ -210,13 +288,43 @@ function App() {
     );
 
   }
+
+  const playlistItemTemplate = (dataItem: any) => {
+    return (
+      <div className="card_container" onClick={() => openSidebar(dataItem)}>
+        <div className="advert-title">{dataItem.adverts_name}</div>
+        <div className="advert-details">
+          {/* Render other advert details here */}
+          Start Time: {formatDate(dataItem.adverts_start_time)}<br />
+          End Time: {formatDate(dataItem.adverts_end_time)}
+          {/* Add more advert details as needed */}
+        </div>
+      </div>
+    );
+  }
+
   const openSidebar = (dataItem: any) => {
     setSelectedDataItem(dataItem);
+
+    // Check the type of dataItem and set the selected item type accordingly
+    if (dataItem.hasOwnProperty('adverts_id')) {
+      setSelectedItemType('advert');
+    } else if (dataItem.hasOwnProperty('advert_playlist_id')) {
+      setSelectedItemType('playlist');
+    }
+
+    // Add the current dataItem to the overlay history
+    setOverlayHistory([...overlayHistory, dataItem]);//used to create a shallow copy of the array as to ensure proper react state management 
+
     setSidebarVisible(true);
   };
 
   const closeSidebar = () => {
     setSidebarVisible(false);
+  };
+
+  const formatTime = (hour: number, minute: number) => {
+    return `${hour}:${minute < 10 ? '0' : ''}${minute}`;
   };
 
   return (
@@ -342,7 +450,7 @@ function App() {
                   <DataView
                     value={responseData.data.data.data}
                     itemTemplate={itemTemplate}
-                    layout = 'grid'
+                    layout='grid'
                     style={{
                       marginTop: 20,
                       borderRadius: 20
@@ -410,10 +518,9 @@ function App() {
         style={{ height: '90vh' }} // Set the height inline
 
       >
-        {selectedDataItem && (
+        {selectedDataItem && selectedItemType === 'advert' && (
           <div className="sidebar-content">
-            {/* Render content for the sidebar based on the selectedDataItem */}
-            {/* Example: */}
+
             <p>
               Name: {selectedDataItem.adverts_id ? selectedDataItem.adverts_name : selectedDataItem.playlist_name}
             </p>
@@ -438,14 +545,76 @@ function App() {
                   showWeek
                   numberOfMonths={1}
                 />
+
+                {selectedDataItem.timeings && selectedDataItem.timeings.length > 0 && (
+                  <div>
+                    <h3>Timeings:</h3>
+                    <ul>
+                      {selectedDataItem.timeings.map((timeing: any, index: number) => (
+                        <li key={index}>
+                          <p>
+                            Schedule {index + 1}:
+                            <br />
+                            Start Time: {formatTime(timeing.adverts_schedule_starthour, timeing.adverts_schedule_startmin)}
+                            <br />
+                            End Time: {formatTime(timeing.adverts_schedule_endhour, timeing.adverts_schedule_endmin)}
+                            <br />
+                            Days: {timeing.adverts_schedule_days.join(', ')}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {/* <FullCalendar
+                  plugins={[dayGridPlugin]}
+                  initialView="dayGridMonth"
+                  events={events} // Replace 'events' with your event data
+                /> */}
                 <p>
-                  Start Date: {selectedDataItem.adverts_start_time}
+                  Start Date: {formatDate(selectedDataItem.adverts_start_time)}
                   <br />
-                  End Date: {selectedDataItem.adverts_end_time}
+                  End Date: {formatDate(selectedDataItem.adverts_end_time)}
                 </p>
               </div>
             )}
             {/* Add more data from selectedDataItem using optional chaining */}
+            <button onClick={goBackToPreviousOverlay}>Back</button>
+          </div>
+
+        )}
+        {selectedItemType === 'playlist' && selectedDataItem && (
+          // Render the sidebar for playlists
+          <div className="sidebar-content">
+            <div>
+              Advert Playlist ID: {selectedDataItem.advert_playlist_id}
+            </div>
+            <div>
+              Playlist Name: {selectedDataItem.playlist_name}
+            </div>
+            {/* Find the selected playlist data */}
+            {(() => {
+              const selectedPlaylistData = responseData.data.data.data.find(
+                (item: any) => item.advert_playlist_id === selectedDataItem.advert_playlist_id
+              );
+
+              if (selectedPlaylistData && selectedPlaylistData.hasOwnProperty('Adverts') && Array.isArray(selectedPlaylistData.Adverts) && selectedPlaylistData.Adverts.length > 0) {
+                return (
+                  <DataView
+                    value={selectedPlaylistData.Adverts} // Use the Adverts[] array of the selected playlist
+                    itemTemplate={playlistItemTemplate}
+                    style={{
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                    }}
+                    className="p-dataview"
+                  />
+                );
+              } else {
+                return <p>No data available</p>;
+              }
+            })()}
+            <button onClick={goBackToPreviousOverlay}>Back</button>
+
           </div>
         )}
       </Sidebar>
