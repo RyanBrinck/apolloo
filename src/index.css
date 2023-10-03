@@ -5,8 +5,8 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: rgb(2, 0, 36);
-  background: linear-gradient(90deg, rgba(2, 0, 36, 1) 0%, rgba(149, 149, 213, 1) 0%, rgba(0, 212, 255, 1) 100%);
+  background: rgb(62, 147, 250);
+  background: linear-gradient(143deg, rgba(62, 147, 250, 1) 12%, rgba(54, 28, 177, 1) 51%, rgba(52, 2, 121, 1) 78%);
 }
 
 .title {
@@ -32,12 +32,10 @@ body {
 }
 
 .content_card {
-  width: 200px;
-  height: 180px;
-  display: inline-block;
-  margin: 5px;
-  border: 1px solid rgb(79, 111, 193);
-  font-size: 12px;
+  border-radius: 5px;
+  background-color: #1f2d40;
+  padding: 10px; /* Add some padding to increase the size */
+  margin: 20px; /* Add margin for spacing */
 }
 
 .time_card {
@@ -101,16 +99,15 @@ body {
   margin: 5px;
   min-width: 200px;
   max-width: 500px;
-  height: 4000px;
   text-align: center;
   border-color: black;
 }
 
 .nav_bar {
   position: sticky;
-  position: -webkit-sticky; 
-  z-index: 10000; 
-  top: 0; 
+  position: -webkit-sticky;
+  z-index: 10000;
+  top: 0;
 }
 
 code {

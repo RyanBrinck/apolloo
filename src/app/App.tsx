@@ -3,7 +3,7 @@ import axios from 'axios';
 import "primereact/resources/themes/vela-blue/theme.css";
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
-import 'primeflex/primeflex.css';     
+import 'primeflex/primeflex.css';
 import { Card } from 'primereact/card';
 import { Menubar } from 'primereact/menubar';
 import { Dialog } from 'primereact/dialog';
@@ -136,7 +136,7 @@ function App() {
     window.location.reload();
   };
 
- const items = [
+  const items = [
     {
       label: 'Calendar',
       icon: <FontAwesomeIcon icon={faCalendarDays} />,
@@ -191,23 +191,24 @@ function App() {
     }
     return 0;
   }
+
   const itemTemplate = (dataItem: any) => {
     return (
       <div className="card_container" onClick={() => openSidebar(dataItem)}>
         <div className="title">
           {dataItem.hasOwnProperty('adverts_name') ? dataItem.adverts_name : dataItem.playlist_name}
         </div>
-        <div className="label">
+        <Tag className="label" style={{
+          backgroundColor: dataItem.hasOwnProperty('adverts_id') ? '' : 'orange',
+          color: 'white'}}>
           {dataItem.hasOwnProperty('adverts_id') ? 'Advert' : 'Playlist'}
-        </div>
+        </Tag>
         <div className="time_card">
           Run Time: {minutesToHHMM(calculateRefreshTime(dataItem))}
         </div>
-        {/* <div className="index">
-                Index: {index}
-            </div> */}
       </div>
     );
+
   }
   const openSidebar = (dataItem: any) => {
     setSelectedDataItem(dataItem);
@@ -335,39 +336,16 @@ function App() {
             </Card>
           </div>
           <div className="flex justify-content-end">
-            {/* {responseData.data.data.data.map((dataItem: any, index: number) => (
-              <Card
-                className="content_card"
-                key={index}
-                style={{
-                  backgroundColor: 'var(--highlight-bg)',
-                  color: 'var(--highlight-text-color)',
-                  borderRadius: 'var(--border-radius)',
-                }}
-              >
-                <div className="title">
-                  {dataItem.hasOwnProperty('adverts_name') ? dataItem.adverts_name : dataItem.playlist_name}
-                </div>
-                <div className="label">
-                  {dataItem.hasOwnProperty('adverts_id') ? 'Advert' : 'Playlist'}
-                </div>
-                <div className="time_card">
-                    Run Time: {minutesToHHMM(calculateRefreshTime(dataItem))}
-                </div>
-              </Card>
-              
-            ))
-            } */}
             {responseData.data && responseData.data.data ? (
-              <div>
+              <div className="content_card">
                 {Array.isArray(responseData.data.data.data) && responseData.data.data.data.length > 0 ? (
                   <DataView
                     value={responseData.data.data.data}
                     itemTemplate={itemTemplate}
-                    //layout='grid'
+                    layout = 'grid'
                     style={{
-                      //display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                      marginTop: 20,
+                      borderRadius: 20
                     }}
                     className="p-dataview"
                   />
