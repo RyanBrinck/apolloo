@@ -5,8 +5,6 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: rgb(62, 147, 250);
-  background: linear-gradient(143deg, rgba(62, 147, 250, 1) 12%, rgba(54, 28, 177, 1) 51%, rgba(52, 2, 121, 1) 78%);
 }
 
 .title {
