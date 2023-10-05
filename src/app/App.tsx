@@ -336,12 +336,12 @@ function App() {
         <div className="app_container">
           <div className="card_container">
             <Card className="team_card">
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-    <div style={{ background: 'white', width: '25px', height: '25px', marginRight: '10px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        <FontAwesomeIcon icon={faBookmark} style={{ color: 'blue' }} />
-    </div>
-    <span style={{ fontSize: '1.2rem' }}>2023: PX team</span>
-</div>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <div style={{ borderRadius: 7, background: 'white', width: '25px', height: '25px', marginRight: '10px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                  <FontAwesomeIcon icon={faBookmark} style={{ color: 'blue' }} />
+                </div>
+                <span style={{ fontSize: '1.2rem' }}>2023: PX team</span>
+              </div>
               <div className="content-wrapper">
                 <div className="info_card">
                   <span className="bold_text">
@@ -404,12 +404,12 @@ function App() {
               </div>
             </Card>
             <Card className="Local_Storage">
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-    <div style={{ background: 'white', width: '25px', height: '25px', marginRight: '10px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        <FontAwesomeIcon icon={faDatabase} style={{ color: 'blue' }} />
-    </div>
-    <span style={{ fontSize: '1.2rem' }}>Local Storage</span>
-</div>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <div style={{ borderRadius: 7, background: 'white', width: '25px', height: '25px', marginRight: '10px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                  <FontAwesomeIcon icon={faDatabase} style={{ color: 'blue' }} />
+                </div>
+                <span style={{ fontSize: '1.2rem' }}>Local Storage</span>
+              </div>
               <div className="content-wrapper">
                 <div className="info_card">
                   <span className="bold_text">
@@ -419,12 +419,12 @@ function App() {
               </div>
             </Card>
             <Card className="Third_Box" >
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-    <div style={{ background: 'white', width: '25px', height: '25px', marginRight: '10px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        <FontAwesomeIcon icon={faUser} style={{ color: 'blue' }} />
-    </div>
-    <span style={{ fontSize: '1.2rem' }}>Profile Data</span>
-</div>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <div style={{ borderRadius: 7, background: 'white', width: '25px', height: '25px', marginRight: '10px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                  <FontAwesomeIcon icon={faUser} style={{ color: 'blue' }} />
+                </div>
+                <span style={{ fontSize: '1.2rem' }}>Profile Data</span>
+              </div>
               <div className="content-wrapper">
                 <div className="info_card">
                   <span className="bold_text">
@@ -595,7 +595,7 @@ function App() {
               Playlist Name: {selectedDataItem.playlist_name}
             </div>
             {/* Find the selected playlist data */}
-        
+
             {(() => {
               const selectedPlaylistData = responseData.data.data.data.find(
                 (item: any) => item.advert_playlist_id === selectedDataItem.advert_playlist_id
@@ -603,7 +603,7 @@ function App() {
 
               if (selectedPlaylistData && selectedPlaylistData.hasOwnProperty('Adverts') && Array.isArray(selectedPlaylistData.Adverts) && selectedPlaylistData.Adverts.length > 0) {
                 return (
-        
+
                   <DataView
                     value={selectedPlaylistData.Adverts} // Use the Adverts[] array of the selected playlist
                     itemTemplate={playlistItemTemplate}
