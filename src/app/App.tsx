@@ -10,12 +10,14 @@ import { Dialog } from 'primereact/dialog';
 import { Calendar } from 'primereact/calendar';
 import { DataView } from 'primereact/dataview';
 import { Tag } from 'primereact/tag';
-import { DataViewLayoutOptions } from 'primereact/dataview';
 import { Sidebar } from 'primereact/sidebar'; // Import Sidebar component
 import { Image } from 'primereact/image';
 import { faCalendarDays } from '@fortawesome/free-solid-svg-icons';
-import { faRotateRight } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'; // Import FontAwesomeIcon component
+import { faRotateRight, faUser, faDatabase, faBookmark } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { library } from '@fortawesome/fontawesome-svg-core';
+library.add(faUser, faBookmark, faDatabase);
+
 
 
 interface DataItem {
@@ -291,7 +293,7 @@ function App() {
 
   const playlistItemTemplate = (dataItem: any) => {
     return (
-      <div className="card_container" onClick={() => openSidebar(dataItem)}>
+      <div className="Playlist" onClick={() => openSidebar(dataItem)}>
         <div className="advert-title">{dataItem.adverts_name}</div>
         <div className="advert-details">
           {/* Render other advert details here */}
@@ -334,12 +336,12 @@ function App() {
         <div className="app_container">
           <div className="card_container">
             <Card className="team_card">
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                <div style={{ background: 'white', width: '2rem', height: '2rem', display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: '0.3rem', marginRight: '0.5rem', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>
-                  <i className="pi pi-bookmark" style={{ fontSize: '1.5rem', color: '#275894' }}></i>
-                </div>
-                <span style={{ fontSize: '1.2rem' }}>2023: PX team</span>
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+    <div style={{ background: 'white', width: '25px', height: '25px', marginRight: '10px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <FontAwesomeIcon icon={faBookmark} style={{ color: 'blue' }} />
+    </div>
+    <span style={{ fontSize: '1.2rem' }}>2023: PX team</span>
+</div>
               <div className="content-wrapper">
                 <div className="info_card">
                   <span className="bold_text">
@@ -402,12 +404,12 @@ function App() {
               </div>
             </Card>
             <Card className="Local_Storage">
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                <div style={{ background: 'white', padding: '0.2rem', borderRadius: '0.3rem', marginRight: '0.5rem' }}>
-                  <i className="pi pi-database" style={{ fontSize: '1.5rem', color: '#275894' }}></i>
-                </div>
-                <span style={{ fontSize: '1.2rem' }}>Local Storage</span>
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+    <div style={{ background: 'white', width: '25px', height: '25px', marginRight: '10px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <FontAwesomeIcon icon={faDatabase} style={{ color: 'blue' }} />
+    </div>
+    <span style={{ fontSize: '1.2rem' }}>Local Storage</span>
+</div>
               <div className="content-wrapper">
                 <div className="info_card">
                   <span className="bold_text">
@@ -417,12 +419,12 @@ function App() {
               </div>
             </Card>
             <Card className="Third_Box" >
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                <div style={{ background: 'white', width: '2rem', height: '2rem', display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: '0.3rem', marginRight: '0.5rem', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>
-                  <i className="pi pi-inbox" style={{ fontSize: '1.5rem', color: '#275894' }}></i>
-                </div>
-                <span style={{ fontSize: '1.2rem' }}>Profile Data</span>
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+    <div style={{ background: 'white', width: '25px', height: '25px', marginRight: '10px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <FontAwesomeIcon icon={faUser} style={{ color: 'blue' }} />
+    </div>
+    <span style={{ fontSize: '1.2rem' }}>Profile Data</span>
+</div>
               <div className="content-wrapper">
                 <div className="info_card">
                   <span className="bold_text">
@@ -593,6 +595,7 @@ function App() {
               Playlist Name: {selectedDataItem.playlist_name}
             </div>
             {/* Find the selected playlist data */}
+        
             {(() => {
               const selectedPlaylistData = responseData.data.data.data.find(
                 (item: any) => item.advert_playlist_id === selectedDataItem.advert_playlist_id
@@ -600,6 +603,7 @@ function App() {
 
               if (selectedPlaylistData && selectedPlaylistData.hasOwnProperty('Adverts') && Array.isArray(selectedPlaylistData.Adverts) && selectedPlaylistData.Adverts.length > 0) {
                 return (
+        
                   <DataView
                     value={selectedPlaylistData.Adverts} // Use the Adverts[] array of the selected playlist
                     itemTemplate={playlistItemTemplate}

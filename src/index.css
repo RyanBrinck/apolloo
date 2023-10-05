@@ -115,6 +115,33 @@ body {
   top: 0;
 }
 
+.advert-details {
+  border-radius: 5px;
+  background-color: #2a496e; /* Grey background color */
+  padding: 10px; /* Add some padding to increase the size */
+  margin: 20px; /* Add margin for spacing */
+
+}
+
+.advert-title {
+  border-radius: 5px;
+  background-color: #193961;
+  padding: 10px; /* Add some padding to increase the size */
+  margin: 20px; /* Add margin for spacing */
+}
+
+.Playlist {
+  background-color: rgb(46, 46, 48);
+  padding: 5px;
+  margin: 10px;
+  border-radius: 10px;
+}
+
+.sidebar-content {
+  font-size: 20px;
+  font-weight: bold;
+}
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
