@@ -5,8 +5,6 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: rgb(2, 0, 36);
-  background: linear-gradient(90deg, rgba(2, 0, 36, 1) 0%, rgba(149, 149, 213, 1) 0%, rgba(0, 212, 255, 1) 100%);
 }
 
 .title {
@@ -32,20 +30,24 @@ body {
 }
 
 .content_card {
-  width: 200px;
-  height: 180px;
-  display: inline-block;
-  margin: 5px;
-  border: 1px solid rgb(79, 111, 193);
-  font-size: 12px;
+  border-radius: 5px;
+  background-color: #1f2d40;
+  padding: 10px; /* Add some padding to increase the size */
+  margin: 20px; /* Add margin for spacing */
 }
 
 .time_card {
   background-color: #d8e0e5;
   color: black;
   border-radius: 16px;
+  text-align: center;
+  width: 250px;
   padding: 7px;
   border: 1px solid rgb(105, 133, 206);
+}
+
+.inline {
+  display: inline-block;
 }
 
 .info_card {
@@ -74,6 +76,7 @@ body {
 .card_container {
   padding: 10px;
   margin: 5px;
+  min-width: 250px;
   background-color: rgba(255, 255, 255, 0);
 }
 
@@ -103,6 +106,40 @@ body {
   max-width: 500px;
   text-align: center;
   border-color: black;
+}
+
+.nav_bar {
+  position: sticky;
+  position: -webkit-sticky;
+  z-index: 10000;
+  top: 0;
+}
+
+.advert-details {
+  border-radius: 5px;
+  background-color: #2a496e; /* Grey background color */
+  padding: 10px; /* Add some padding to increase the size */
+  margin: 20px; /* Add margin for spacing */
+
+}
+
+.advert-title {
+  border-radius: 5px;
+  background-color: #193961;
+  padding: 10px; /* Add some padding to increase the size */
+  margin: 20px; /* Add margin for spacing */
+}
+
+.Playlist {
+  background-color: rgb(46, 46, 48);
+  padding: 5px;
+  margin: 10px;
+  border-radius: 10px;
+}
+
+.sidebar-content {
+  font-size: 20px;
+  font-weight: bold;
 }
 
 code {
