@@ -12,11 +12,15 @@ import { DataView } from 'primereact/dataview';
 import { Tag } from 'primereact/tag';
 import { Sidebar } from 'primereact/sidebar'; // Import Sidebar component
 import { Image } from 'primereact/image';
-import { faCalendarDays } from '@fortawesome/free-solid-svg-icons';
+import { faCalendarDays, faCircle } from '@fortawesome/free-solid-svg-icons';
 import { faRotateRight, faUser, faDatabase, faBookmark } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
-library.add(faUser, faBookmark, faDatabase);
+
+import FullCalendar from "@fullcalendar/react";
+import timeGridPlugin from '@fullcalendar/timegrid';
+import { EventInput } from '@fullcalendar/core';
+import { time } from 'console';
 
 
 
@@ -30,6 +34,7 @@ interface DataItem {
   adverts_file_name_unique?: string;
   advert_playlist_id?: number; // Add this property if it's expected to exist
   timeings?: Timeing[]; // Add the timeings array
+  Adverts?: DataItem[]; // Assuming 'Adverts' is an array of 'DataItem'
   // ... add other properties as needed
 }
 
@@ -63,6 +68,9 @@ function App() {
   const [sidebarVisible, setSidebarVisible] = useState(false); // State for showing/hiding the sidebar
   const [selectedItemType, setSelectedItemType] = useState<string | null>(null);
   const [overlayHistory, setOverlayHistory] = useState<DataItem[]>([]);
+  const [playlistSidebarVisible, setPlaylistSidebarVisible] = useState(false);
+  const [advertSidebarVisible, setAdvertSidebarVisible] = useState(false);
+  const [selectedPlaylistData, setSelectedPlaylistData] = useState<DataItem | null>(null);
 
   const goBackToPreviousOverlay = () => {
     if (overlayHistory.length > 1) {
@@ -108,6 +116,79 @@ function App() {
     }
   };
 
+  const calendarEvents: EventInput[] = [];
+
+  // Filter and push events to calendarEvents based on the selected sidebar data
+  if (responseData.data && responseData.data.data) {
+    responseData.data.data.data.forEach((item: DataItem) => {
+      if (item.timeings && item.timeings.length > 0) {
+        item.timeings.forEach((timeing) => {
+          const daysOfWeek: number[] = convertDaysToNumbers(timeing.adverts_schedule_days) || [];
+          if (daysOfWeek.length > 0) {
+            const startDateStr = item.adverts_start_time;
+            const endDateStr = item.adverts_end_time;
+
+            if (startDateStr && endDateStr) {
+              const startDate = new Date(startDateStr);
+              const endDate = new Date(endDateStr);
+
+              const startTime = new Date(startDate);
+              const endTime = new Date(startDate);
+
+              startTime.setHours(timeing.adverts_schedule_starthour);
+              startTime.setMinutes(timeing.adverts_schedule_startmin);
+              endTime.setHours(timeing.adverts_schedule_endhour);
+              endTime.setMinutes(timeing.adverts_schedule_endmin);
+
+              while (startDate <= endDate) {
+                const dayOfWeekNumber = startDate.getDay(); // Get the numeric day of the week
+                if (selectedDataItem && (item.adverts_name === selectedDataItem.adverts_name) && daysOfWeek.includes(dayOfWeekNumber)) {
+                  const currentStartDate = new Date(startDate); // Create new Date objects
+                  const currentStartTime = new Date(startTime);
+
+                  const currentEndDate = new Date(currentStartDate); // Create a new currentEndDate variable
+                  currentEndDate.setHours(endTime.getHours());
+                  currentEndDate.setMinutes(endTime.getMinutes());
+                  currentEndDate.setSeconds(0);
+
+                  if (currentEndDate > new Date(endDateStr)) {
+                    currentEndDate.setHours(new Date(endTime).getHours());
+                    currentEndDate.setMinutes(new Date(endTime).getMinutes());
+                  }
+
+                  calendarEvents.push({
+                    title: item.adverts_name || '',
+                    start: `${currentStartDate.getFullYear()}-${(currentStartDate.getMonth() + 1).toString().padStart(2, '0')}-${currentStartDate.getDate().toString().padStart(2, '0')}T${currentStartTime.getHours().toString().padStart(2, '0')}:${currentStartTime.getMinutes().toString().padStart(2, '0')}:00`,
+                    end: `${currentEndDate.getFullYear()}-${(currentEndDate.getMonth() + 1).toString().padStart(2, '0')}-${currentEndDate.getDate().toString().padStart(2, '0')}T${currentEndDate.getHours().toString().padStart(2, '0')}:${currentEndDate.getMinutes().toString().padStart(2, '0')}:00`,
+                  });
+                }
+
+                startDate.setDate(startDate.getDate() + 1);
+                startTime.setDate(startTime.getDate() + 1);
+                endTime.setDate(endTime.getDate() + 1);
+
+                if (startDate > new Date(endDateStr)) {
+                  break;
+                }
+              }
+            }
+          }
+        });
+      }
+    });
+  }
+
+  function convertDaysToNumbers(days: string[]): number[] {
+    const dayOfWeekNumbers = days.map((day) => {
+      // Remove leading spaces and convert to a number
+      const dayOfWeekNumber = parseInt(day.trim(), 10);
+      return !isNaN(dayOfWeekNumber) ? dayOfWeekNumber : null; // Return the number or null if it's not a valid number
+    });
+
+    // Filter out null values and return only valid numbers
+    return dayOfWeekNumbers.filter((number) => number !== null) as number[];
+  }
+
   //fetch data from api using axios
   useEffect(() => {
     // Define the API URL
@@ -131,10 +212,14 @@ function App() {
     };
     window.addEventListener('keydown', handleKeyDown);
 
+
     // Make the GET request to the API using Axios
     axios.get(apiUrl)
       .then((response) => {
         const data = response.data;
+
+        //responseData.data.data.data.adverts_file_name_unique
+
         // Find the earliest start time and latest end time
         let earliestStart: Date | null = null;
         let latestEnd: Date | null = null;
@@ -270,30 +355,32 @@ function App() {
 
   const itemTemplate = (dataItem: any) => {
     return (
-      <div className="card_container" onClick={() => openSidebar(dataItem)}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Tag className="label" style={{
-            backgroundColor: dataItem.hasOwnProperty('adverts_id') ? '' : 'orange',
-            color: 'white',
-            marginRight: '8px', // Add some spacing between label and title
-          }}>
-            {dataItem.hasOwnProperty('adverts_id') ? 'Advert' : 'Playlist'}
-          </Tag>
-          <div className="title">
-            {dataItem.hasOwnProperty('adverts_name') ? dataItem.adverts_name : dataItem.playlist_name}
+      <Card style={{ backgroundColor: '#111111', margin: 4 }}>
+        <div className="card_container" onClick={() => openSidebar(dataItem)}>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <Tag className="label" style={{
+              backgroundColor: dataItem.hasOwnProperty('adverts_id') ? '' : 'orange',
+              color: 'white',
+              marginRight: '8px', // Add some spacing between label and title
+            }}>
+              {dataItem.hasOwnProperty('adverts_id') ? 'Advert' : 'Playlist'}
+            </Tag>
+            <div className="title">
+              {dataItem.hasOwnProperty('adverts_name') ? dataItem.adverts_name : dataItem.playlist_name}
+            </div>
+          </div>
+          <div className="time_card">
+            Run Time: {minutesToHHMM(calculateRefreshTime(dataItem))}
           </div>
         </div>
-        <div className="time_card">
-          Run Time: {minutesToHHMM(calculateRefreshTime(dataItem))}
-        </div>
-      </div>
+      </Card>
     );
 
   }
 
   const playlistItemTemplate = (dataItem: any) => {
     return (
-      <div className="Playlist" onClick={() => openSidebar(dataItem)}>
+      <div className="card_container" onClick={() => openSidebar(dataItem)}>
         <div className="advert-title">{dataItem.adverts_name}</div>
         <div className="advert-details">
           {/* Render other advert details here */}
@@ -306,24 +393,31 @@ function App() {
   }
 
   const openSidebar = (dataItem: any) => {
-    setSelectedDataItem(dataItem);
-
-    // Check the type of dataItem and set the selected item type accordingly
     if (dataItem.hasOwnProperty('adverts_id')) {
-      setSelectedItemType('advert');
+      // If it's an advert, open the advert sidebar
+      setAdvertSidebarVisible(true);
     } else if (dataItem.hasOwnProperty('advert_playlist_id')) {
-      setSelectedItemType('playlist');
+      // If it's a playlist, open the playlist sidebar
+      setPlaylistSidebarVisible(true);
+      // Set the selectedPlaylistData when opening the playlist sidebar
+      setSelectedPlaylistData(dataItem);
     }
-
-    // Add the current dataItem to the overlay history
-    setOverlayHistory([...overlayHistory, dataItem]);//used to create a shallow copy of the array as to ensure proper react state management 
-
-    setSidebarVisible(true);
+    setSelectedDataItem(dataItem);
   };
 
   const closeSidebar = () => {
-    setSidebarVisible(false);
+    setAdvertSidebarVisible(false);
+    // setPlaylistSidebarVisible(false); // Close both sidebars when closing
+    setSelectedDataItem(null);
+    // setSelectedPlaylistData(null); // Reset the selected playlist data
   };
+  const closeAllSidebars = () => {
+    setAdvertSidebarVisible(false);
+    setPlaylistSidebarVisible(false);
+    setSelectedDataItem(null);
+    setSelectedPlaylistData(null); // Reset the selected playlist data
+  };
+
 
   const formatTime = (hour: number, minute: number) => {
     return `${hour}:${minute < 10 ? '0' : ''}${minute}`;
@@ -510,17 +604,18 @@ function App() {
       >
         {/* Add your edit content here */}
         <p>R: Refresh the page</p>
+        <p>B/ESC: Go back</p>
       </Dialog>
 
       <Sidebar
+        id="advertsSidebar"
         className='sideBar'
-        visible={sidebarVisible}
+        visible={advertSidebarVisible} // Show 'advertsSidebar' when 'advert' is selected
         position="bottom"
         onHide={closeSidebar}
-        style={{ height: '90vh' }} // Set the height inline
-
+        style={{ height: '90vh' }}
       >
-        {selectedDataItem && selectedItemType === 'advert' && (
+        {selectedDataItem && (
           <div className="sidebar-content">
 
             <p>
@@ -529,9 +624,9 @@ function App() {
             {/* Display the image */}
             {selectedDataItem.adverts_file_name && (
               <Image
-                src={`/template/content/images/${selectedDataItem.adverts_file_name_unique}`} // Replace with the actual URL or path to your images
+                src={`http://127.0.0.1:3000/api/getImage/${selectedDataItem.adverts_file_name_unique}`} // Replace with the actual URL or path to your images
                 // alt={selectedDataItem.adverts_name || selectedDataItem.playlist_name}
-                style={{ maxWidth: '100%', maxHeight: '300px' }}
+                width="200" height="100"
               />
             )}
             {selectedDataItem.adverts_start_time && selectedDataItem.adverts_end_time && (
@@ -566,44 +661,72 @@ function App() {
                         </li>
                       ))}
                     </ul>
+
                   </div>
                 )}
-                {/* <FullCalendar
-                  plugins={[dayGridPlugin]}
-                  initialView="dayGridMonth"
-                  events={events} // Replace 'events' with your event data
-                /> */}
                 <p>
                   Start Date: {formatDate(selectedDataItem.adverts_start_time)}
                   <br />
                   End Date: {formatDate(selectedDataItem.adverts_end_time)}
                 </p>
+
+                <div>
+                  <FullCalendar
+                    plugins={[timeGridPlugin]}
+                    initialView="timeGridWeek"
+                    events={calendarEvents} // Wrap the single event in an array
+                    // eventBackgroundColor="red" // Set the default event background color
+                    // eventTextColor="white" // Set the default event text color
+                    allDaySlot={false} // Disable the "all day" slot
+                    initialDate={calendarEvents.length > 0 ? calendarEvents[0].start : new Date()} // Set initial date to the start date of the first event, or today's date if there are no events
+                    
+                  />
+                {/* <div>
+                    {calendarEvents.map((event, index) => (
+                      <p key={index}>
+                        <strong>Title:</strong> {event.title}<br />
+                        <strong>Start:</strong> {event.start?.toString()}<br />
+                        <strong>End:</strong> {event.end?.toString()}
+                      </p>
+                    ))}
+                </div> */}
+                </div>
+                
               </div>
             )}
             {/* Add more data from selectedDataItem using optional chaining */}
-            <button onClick={goBackToPreviousOverlay}>Back</button>
+            {/* <button onClick={goBackToPreviousOverlay}>Back</button> */}
+
           </div>
 
         )}
-        {selectedItemType === 'playlist' && selectedDataItem && (
+
+      </Sidebar>
+      <Sidebar
+        id="playlistSidebar"
+        className='sideBar'
+        visible={playlistSidebarVisible} // Show 'playlistSidebar' when 'playlist' is selected
+        position="bottom"
+        onHide={() => setPlaylistSidebarVisible(false)} // Close the playlist sidebar
+        style={{ height: '90vh' }}
+      >
+        {selectedPlaylistData && selectedPlaylistData.Adverts && (
           // Render the sidebar for playlists
           <div className="sidebar-content">
             <div>
-              Advert Playlist ID: {selectedDataItem.advert_playlist_id}
+              Advert Playlist ID: {selectedPlaylistData.advert_playlist_id}
             </div>
             <div>
-              Playlist Name: {selectedDataItem.playlist_name}
+              Playlist Name: {selectedPlaylistData.playlist_name}
             </div>
             {/* Find the selected playlist data */}
-
             {(() => {
-              const selectedPlaylistData = responseData.data.data.data.find(
-                (item: any) => item.advert_playlist_id === selectedDataItem.advert_playlist_id
-              );
-
-              if (selectedPlaylistData && selectedPlaylistData.hasOwnProperty('Adverts') && Array.isArray(selectedPlaylistData.Adverts) && selectedPlaylistData.Adverts.length > 0) {
+              if (
+                selectedPlaylistData.Adverts &&
+                Array.isArray(selectedPlaylistData.Adverts) &&
+                selectedPlaylistData.Adverts.length > 0
+              ) {
                 return (
-
                   <DataView
                     value={selectedPlaylistData.Adverts} // Use the Adverts[] array of the selected playlist
                     itemTemplate={playlistItemTemplate}
@@ -617,7 +740,7 @@ function App() {
                 return <p>No data available</p>;
               }
             })()}
-            <button onClick={goBackToPreviousOverlay}>Back</button>
+            {/* <button onClick={goBackToPreviousOverlay}>Back</button> */}
 
           </div>
         )}
