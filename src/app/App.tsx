@@ -16,12 +16,11 @@ import { faCalendarDays, faCircle } from '@fortawesome/free-solid-svg-icons';
 import { faRotateRight, faUser, faDatabase, faBookmark } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
-
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from '@fullcalendar/timegrid';
 import { EventInput } from '@fullcalendar/core';
 import { time } from 'console';
-
+import ReactPlayer from 'react-player';
 
 
 interface DataItem {
@@ -628,6 +627,14 @@ function App() {
                 // alt={selectedDataItem.adverts_name || selectedDataItem.playlist_name}
                 width="200" height="100"
               />
+            )}
+            {selectedDataItem.adverts_file_name && (
+              <video controls width={200} height={100} autoPlay>
+                <source
+                  src={`http://127.0.0.1:3000/api/getVideo/${selectedDataItem.adverts_file_name_unique}`} // Replace with the actual URL or path to your images
+                // alt={selectedDataItem.adverts_name || selectedDataItem.playlist_name}
+                />
+              </video>
             )}
             {selectedDataItem.adverts_start_time && selectedDataItem.adverts_end_time && (
               <div>
