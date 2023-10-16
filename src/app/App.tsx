@@ -25,6 +25,7 @@ import ReactPlayer from 'react-player';
 
 interface DataItem {
   adverts_id?: number;
+  adverts_type?: number;
   adverts_name?: string;
   playlist_name?: string;
   adverts_start_time?: string;
@@ -353,26 +354,77 @@ function App() {
   }
 
   const itemTemplate = (dataItem: any) => {
+    let circleColor = 'gray'; // Default to gray
+    const startDate = new Date(dataItem.adverts_start_time);
+    const endDate = new Date(dataItem.adverts_end_time);
+    const now = new Date();
+    if (startDate!=null && endDate!=null) {
+     
+      if (startDate <= now && endDate >= now) {
+        // console.log(endDate)
+        // console.log(startDate)
+        if (dataItem.timeings && dataItem.timeings.length > 0) {
+
+          const currentTime = now.getHours() * 60 + now.getMinutes();
+          const currentDay = now.getDay();
+         
+          dataItem.timeings.find((timeing: any) => {
+            // Convert the daysOfWeek array elements to integers
+            const daysOfWeek = timeing.adverts_schedule_days.map((day: string) => parseInt(day.trim(), 10));
+
+            // Check if the current day is in the specified daysOfWeek
+            if (daysOfWeek.includes(currentDay)) {
+              const startTime = timeing.adverts_schedule_starthour * 60 + timeing.adverts_schedule_startmin;
+              const endTime = timeing.adverts_schedule_endhour * 60 + timeing.adverts_schedule_endmin;
+              
+              // Check if the current time falls within the specified time range
+              if ((currentTime >= startTime) && (currentTime <= endTime)) {
+                circleColor = "green";
+              } else if ((currentTime < startTime) || (currentTime > endTime)) {
+                circleColor = "orange";
+              }else {
+                circleColor = "red";
+              } 
+            }
+
+          });
+        }
+      }
+      else {
+        circleColor = "red";
+      }
+    }
+    
+    const handleAnchorKeyPress = (event: React.KeyboardEvent) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        openSidebar(dataItem);
+      }
+    };
+    
     return (
-      <Card style={{ backgroundColor: '#111111', margin: 4 }}>
-        <div className="card_container" onClick={() => openSidebar(dataItem)}>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <Tag className="label" style={{
-              backgroundColor: dataItem.hasOwnProperty('adverts_id') ? '' : 'orange',
-              color: 'white',
-              marginRight: '8px', // Add some spacing between label and title
-            }}>
-              {dataItem.hasOwnProperty('adverts_id') ? 'Advert' : 'Playlist'}
-            </Tag>
-            <div className="title">
-              {dataItem.hasOwnProperty('adverts_name') ? dataItem.adverts_name : dataItem.playlist_name}
+      <a tabIndex={0} onKeyPress={handleAnchorKeyPress}>
+        <Card style={{ backgroundColor: '#111111', margin: 4 }}>
+          <div className="card_container" onClick={() => openSidebar(dataItem)}>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <Tag className="label" style={{
+                backgroundColor: dataItem.hasOwnProperty('adverts_id') ? '' : 'orange',
+                color: 'white',
+                marginRight: '8px', // Add some spacing between label and title
+              }}>
+                {dataItem.hasOwnProperty('adverts_id') ? 'Advert' : 'Playlist'}
+              </Tag>
+              <div className="title">
+                {dataItem.hasOwnProperty('adverts_name') ? dataItem.adverts_name : dataItem.playlist_name}
+              </div>
+              <FontAwesomeIcon icon={faCircle} style={{ color: circleColor }} />
+            </div>
+            <div className="time_card">
+              Run Time: {minutesToHHMM(calculateRefreshTime(dataItem))}
             </div>
           </div>
-          <div className="time_card">
-            Run Time: {minutesToHHMM(calculateRefreshTime(dataItem))}
-          </div>
-        </div>
-      </Card>
+        </Card>
+      </a>
     );
 
   }
@@ -616,20 +668,18 @@ function App() {
       >
         {selectedDataItem && (
           <div className="sidebar-content">
-
             <p>
               Name: {selectedDataItem.adverts_id ? selectedDataItem.adverts_name : selectedDataItem.playlist_name}
             </p>
             {/* Display the image */}
-            {selectedDataItem.adverts_file_name && (
+            {selectedDataItem.adverts_type !== 5 ? (
               <Image
                 src={`http://127.0.0.1:3000/api/getImage/${selectedDataItem.adverts_file_name_unique}`} // Replace with the actual URL or path to your images
                 // alt={selectedDataItem.adverts_name || selectedDataItem.playlist_name}
                 width="200" height="100"
               />
-            )}
-            {selectedDataItem.adverts_file_name && (
-              <video controls width={200} height={100} autoPlay>
+            ) : (
+              <video controls width={400} height={200} autoPlay>
                 <source
                   src={`http://127.0.0.1:3000/api/getVideo/${selectedDataItem.adverts_file_name_unique}`} // Replace with the actual URL or path to your images
                 // alt={selectedDataItem.adverts_name || selectedDataItem.playlist_name}
@@ -686,9 +736,9 @@ function App() {
                     // eventTextColor="white" // Set the default event text color
                     allDaySlot={false} // Disable the "all day" slot
                     initialDate={calendarEvents.length > 0 ? calendarEvents[0].start : new Date()} // Set initial date to the start date of the first event, or today's date if there are no events
-                    
+
                   />
-                {/* <div>
+                  {/* <div>
                     {calendarEvents.map((event, index) => (
                       <p key={index}>
                         <strong>Title:</strong> {event.title}<br />
@@ -698,7 +748,7 @@ function App() {
                     ))}
                 </div> */}
                 </div>
-                
+
               </div>
             )}
             {/* Add more data from selectedDataItem using optional chaining */}
