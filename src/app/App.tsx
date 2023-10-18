@@ -404,7 +404,7 @@ function App() {
     
     return (
       <a tabIndex={0} onKeyPress={handleAnchorKeyPress}>
-        <Card style={{ backgroundColor: '#111111', margin: 4 }}>
+        <Card style={{ backgroundColor: '#111111', margin: 4, maxWidth: 312}}>
           <div className="card_container" onClick={() => openSidebar(dataItem)}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <Tag className="label" style={{
@@ -671,7 +671,7 @@ function App() {
             <p>
               Name: {selectedDataItem.adverts_id ? selectedDataItem.adverts_name : selectedDataItem.playlist_name}
             </p>
-            {/* Display the image */}
+            <div className="display_content">
             {selectedDataItem.adverts_type !== 5 ? (
               <Image
                 src={`http://127.0.0.1:3000/api/getImage/${selectedDataItem.adverts_file_name_unique}`} // Replace with the actual URL or path to your images
@@ -686,6 +686,7 @@ function App() {
                 />
               </video>
             )}
+            </div>
             {selectedDataItem.adverts_start_time && selectedDataItem.adverts_end_time && (
               <div>
                 <Calendar
