@@ -12,15 +12,13 @@ import { DataView } from 'primereact/dataview';
 import { Tag } from 'primereact/tag';
 import { Sidebar } from 'primereact/sidebar'; // Import Sidebar component
 import { Image } from 'primereact/image';
-import { faCalendarDays, faCircle } from '@fortawesome/free-solid-svg-icons';
+import { faCalendarDays, faCircle, faWifi, faBook } from '@fortawesome/free-solid-svg-icons';
 import { faRotateRight, faUser, faDatabase, faBookmark } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { library } from '@fortawesome/fontawesome-svg-core';
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from '@fullcalendar/timegrid';
 import { EventInput } from '@fullcalendar/core';
-import { time } from 'console';
-import ReactPlayer from 'react-player';
+
 
 
 interface DataItem {
@@ -35,6 +33,8 @@ interface DataItem {
   advert_playlist_id?: number; // Add this property if it's expected to exist
   timeings?: Timeing[]; // Add the timeings array
   Adverts?: DataItem[]; // Assuming 'Adverts' is an array of 'DataItem'
+  mute_audio: number;
+  audio_volume: number;
   // ... add other properties as needed
 }
 
@@ -71,6 +71,7 @@ function App() {
   const [playlistSidebarVisible, setPlaylistSidebarVisible] = useState(false);
   const [advertSidebarVisible, setAdvertSidebarVisible] = useState(false);
   const [selectedPlaylistData, setSelectedPlaylistData] = useState<DataItem | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const goBackToPreviousOverlay = () => {
     if (overlayHistory.length > 1) {
@@ -207,11 +208,19 @@ function App() {
       } else if (e.key === 'B' || e.key === 'b') {
         // Handle the "b" key press by calling the goBackToPreviousOverlay function
         goBackToPreviousOverlay();
+      } else if (e.key === 'C' || e.key === 'c') {
+        // Handle the "c" key press by calling the goBackToPreviousOverlay function
+        closeAllSidebars();
       }
-
     };
     window.addEventListener('keydown', handleKeyDown);
 
+    if (selectedDataItem && selectedDataItem.adverts_type === 5 && selectedDataItem.mute_audio === 0) {
+      if (videoRef.current) {
+        // Adjust the audio volume to the desired percentage (audio_volume / 200)
+        videoRef.current.volume = selectedDataItem.audio_volume / 200;
+      }
+    }
 
     // Make the GET request to the API using Axios
     axios.get(apiUrl)
@@ -319,15 +328,8 @@ function App() {
 
   const end = (
     <div>
-      <i
-        className="pi pi-wifi"
-        style={{ fontSize: '2rem', color: isConnected ? 'green' : 'red' }}
-      ></i>
-      <i
-        className="pi pi-book"
-        style={{ fontSize: '2rem', marginLeft: '1rem' }}
-        onClick={() => setShowControlDialog(true)} // Show the edit dialog when "book" icon is clicked
-      ></i>
+      <FontAwesomeIcon icon={faWifi} style={{ fontSize: '2rem', color: isConnected ? 'green' : 'red' }} /> {/* Use FontAwesomeIcon for Wifi */}
+      <FontAwesomeIcon icon={faBook} style={{ fontSize: '2rem', marginLeft: '1rem' }} onClick={() => setShowControlDialog(true)} /> {/* Use FontAwesomeIcon for Book */}
     </div>
   );
 
@@ -358,8 +360,8 @@ function App() {
     const startDate = new Date(dataItem.adverts_start_time);
     const endDate = new Date(dataItem.adverts_end_time);
     const now = new Date();
-    if (startDate!=null && endDate!=null) {
-     
+    if (startDate != null && endDate != null) {
+
       if (startDate <= now && endDate >= now) {
         // console.log(endDate)
         // console.log(startDate)
@@ -367,7 +369,7 @@ function App() {
 
           const currentTime = now.getHours() * 60 + now.getMinutes();
           const currentDay = now.getDay();
-         
+
           dataItem.timeings.find((timeing: any) => {
             // Convert the daysOfWeek array elements to integers
             const daysOfWeek = timeing.adverts_schedule_days.map((day: string) => parseInt(day.trim(), 10));
@@ -376,15 +378,15 @@ function App() {
             if (daysOfWeek.includes(currentDay)) {
               const startTime = timeing.adverts_schedule_starthour * 60 + timeing.adverts_schedule_startmin;
               const endTime = timeing.adverts_schedule_endhour * 60 + timeing.adverts_schedule_endmin;
-              
+
               // Check if the current time falls within the specified time range
               if ((currentTime >= startTime) && (currentTime <= endTime)) {
                 circleColor = "green";
               } else if ((currentTime < startTime) || (currentTime > endTime)) {
                 circleColor = "orange";
-              }else {
+              } else {
                 circleColor = "red";
-              } 
+              }
             }
 
           });
@@ -394,17 +396,17 @@ function App() {
         circleColor = "red";
       }
     }
-    
+
     const handleAnchorKeyPress = (event: React.KeyboardEvent) => {
       if (event.key === 'Enter') {
         event.preventDefault();
         openSidebar(dataItem);
       }
     };
-    
+
     return (
       <a tabIndex={0} onKeyPress={handleAnchorKeyPress}>
-        <Card style={{ backgroundColor: '#111111', margin: 4, maxWidth: 312}}>
+        <Card style={{ backgroundColor: '#111111', margin: 4, maxWidth: 312 }}>
           <div className="card_container" onClick={() => openSidebar(dataItem)}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <Tag className="label" style={{
@@ -462,6 +464,7 @@ function App() {
     setSelectedDataItem(null);
     // setSelectedPlaylistData(null); // Reset the selected playlist data
   };
+
   const closeAllSidebars = () => {
     setAdvertSidebarVisible(false);
     setPlaylistSidebarVisible(false);
@@ -587,6 +590,15 @@ function App() {
                     {JSON.stringify(responseData.data.data.profile.audio_volume, null, 2)}
                   </span>
                 </div>
+                {responseData.data.data.profile.dimmers && responseData.data.data.profile.dimmers.length > 0 ? (
+                  <a tabIndex={0}>
+                    <div className="info_card">
+                      <span className="bold_text">
+                        Dimmers
+                      </span>
+                    </div>
+                  </a>
+                ) : (<></>)}
               </div>
             </Card>
           </div>
@@ -656,6 +668,9 @@ function App() {
         {/* Add your edit content here */}
         <p>R: Refresh the page</p>
         <p>B/ESC: Go back</p>
+        <p>K: Open keybind</p>
+        <p>Tab: Cycle elements</p>
+        <p>Enter: Open element</p>
       </Dialog>
 
       <Sidebar
@@ -668,66 +683,51 @@ function App() {
       >
         {selectedDataItem && (
           <div className="sidebar-content">
-            <p>
-              Name: {selectedDataItem.adverts_id ? selectedDataItem.adverts_name : selectedDataItem.playlist_name}
+            <p className="sidebar_title" >
+              {selectedDataItem.adverts_id ? selectedDataItem.adverts_name : selectedDataItem.playlist_name}
             </p>
             <div className="display_content">
-            {selectedDataItem.adverts_type !== 5 ? (
-              <Image
-                src={`http://127.0.0.1:3000/api/getImage/${selectedDataItem.adverts_file_name_unique}`} // Replace with the actual URL or path to your images
+              {selectedDataItem.adverts_type !== 5 ? (
+                <Image
+                  src={`http://127.0.0.1:3000/api/getImage/${selectedDataItem.adverts_file_name_unique}`} // Replace with the actual URL or path to your images
                 // alt={selectedDataItem.adverts_name || selectedDataItem.playlist_name}
-                width="200" height="100"
-              />
-            ) : (
-              <video controls width={400} height={200} autoPlay>
-                <source
-                  src={`http://127.0.0.1:3000/api/getVideo/${selectedDataItem.adverts_file_name_unique}`} // Replace with the actual URL or path to your images
-                // alt={selectedDataItem.adverts_name || selectedDataItem.playlist_name}
+
                 />
-              </video>
-            )}
+              ) : (
+                <video autoPlay muted>
+                  <source
+                    src={`http://127.0.0.1:3000/api/getVideo/${selectedDataItem.adverts_file_name_unique}`} // Replace with the actual URL or path to your images
+                  // alt={selectedDataItem.adverts_name || selectedDataItem.playlist_name}
+                  />
+                </video>
+              )}
             </div>
-            {selectedDataItem.adverts_start_time && selectedDataItem.adverts_end_time && (
+            {selectedDataItem.timeings && selectedDataItem.timeings.length > 0 && (
               <div>
-                <Calendar
-                  value={[
-                    new Date(selectedDataItem.adverts_start_time),
-                    new Date(selectedDataItem.adverts_end_time)
-                  ]}
-                  selectionMode="range"
-                  inline
-                  style={{ width: '100%' }}
-                  showWeek
-                  numberOfMonths={1}
-                />
+                <div>
+                  <h3>Timeings:</h3>
+                  <ul>
+                    {selectedDataItem.timeings.map((timeing: any, index: number) => (
+                      <li key={index}>
+                        <p>
+                          Schedule {index + 1}:
+                          <br />
+                          Start Time: {formatTime(timeing.adverts_schedule_starthour, timeing.adverts_schedule_startmin)}
+                          <br />
+                          End Time: {formatTime(timeing.adverts_schedule_endhour, timeing.adverts_schedule_endmin)}
+                          <br />
+                          Days: {timeing.adverts_schedule_days.join(', ')}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
 
-                {selectedDataItem.timeings && selectedDataItem.timeings.length > 0 && (
-                  <div>
-                    <h3>Timeings:</h3>
-                    <ul>
-                      {selectedDataItem.timeings.map((timeing: any, index: number) => (
-                        <li key={index}>
-                          <p>
-                            Schedule {index + 1}:
-                            <br />
-                            Start Time: {formatTime(timeing.adverts_schedule_starthour, timeing.adverts_schedule_startmin)}
-                            <br />
-                            End Time: {formatTime(timeing.adverts_schedule_endhour, timeing.adverts_schedule_endmin)}
-                            <br />
-                            Days: {timeing.adverts_schedule_days.join(', ')}
-                          </p>
-                        </li>
-                      ))}
-                    </ul>
-
-                  </div>
-                )}
+                </div>
                 <p>
                   Start Date: {formatDate(selectedDataItem.adverts_start_time)}
                   <br />
                   End Date: {formatDate(selectedDataItem.adverts_end_time)}
                 </p>
-
                 <div>
                   <FullCalendar
                     plugins={[timeGridPlugin]}
@@ -737,26 +737,11 @@ function App() {
                     // eventTextColor="white" // Set the default event text color
                     allDaySlot={false} // Disable the "all day" slot
                     initialDate={calendarEvents.length > 0 ? calendarEvents[0].start : new Date()} // Set initial date to the start date of the first event, or today's date if there are no events
-
                   />
-                  {/* <div>
-                    {calendarEvents.map((event, index) => (
-                      <p key={index}>
-                        <strong>Title:</strong> {event.title}<br />
-                        <strong>Start:</strong> {event.start?.toString()}<br />
-                        <strong>End:</strong> {event.end?.toString()}
-                      </p>
-                    ))}
-                </div> */}
                 </div>
-
               </div>
-            )}
-            {/* Add more data from selectedDataItem using optional chaining */}
-            {/* <button onClick={goBackToPreviousOverlay}>Back</button> */}
-
+            )}        
           </div>
-
         )}
 
       </Sidebar>
