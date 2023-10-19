@@ -703,31 +703,41 @@ function App() {
               )}
             </div>
             {selectedDataItem.timeings && selectedDataItem.timeings.length > 0 && (
-              <div>
-                <div>
-                  <h3>Timeings:</h3>
-                  <ul>
-                    {selectedDataItem.timeings.map((timeing: any, index: number) => (
-                      <li key={index}>
-                        <p>
-                          Schedule {index + 1}:
-                          <br />
-                          Start Time: {formatTime(timeing.adverts_schedule_starthour, timeing.adverts_schedule_startmin)}
-                          <br />
-                          End Time: {formatTime(timeing.adverts_schedule_endhour, timeing.adverts_schedule_endmin)}
-                          <br />
-                          Days: {timeing.adverts_schedule_days.join(', ')}
-                        </p>
-                      </li>
-                    ))}
-                  </ul>
+                <div className="surface-0 py-4 px-4">
+                    <div>
+                        <div className="font-medium text-3xl text-900 mb-3">Timings</div>
+                        <ul className="list-none p-0 m-0">
+                            {selectedDataItem.timeings.map((timeing: any, index: number) => (
+                                <div>
+                                    <li className="flex align-items-center py-3 px-2 border-top border=150 flex wrap" key={index}>
+                                        <div className="text-900 w-6 md:w-2 font-large">Schedule {index + 1}</div>
+                                    </li>
+                                    <li className="flex align-items-center py-3 px-2 border-top border=150 flex wrap">
+                                        <div className="text-500 w-6 md:w-2 font-medium">Start Time</div>
+                                        <div className="text-900 w-full md:w-8 md:flex-order-0 flex-order-1">{formatTime(timeing.adverts_schedule_starthour, timeing.adverts_schedule_startmin)}</div>
+                                    </li>
+                                    <li className="flex align-items-center py-3 px-2 border-top border=150 flex wrap">
+                                        <div className="text-500 w-6 md:w-2 font-medium">End Time</div>
+                                        <div className="text-900 w-full md:w-8 md:flex-order-0 flex-order-1">{formatTime(timeing.adverts_schedule_endhour, timeing.adverts_schedule_endmin)}</div>
+                                    </li>
+                                    <li className="flex align-items-center py-3 px-2 border-top border=150 flex wrap">
+                                        <div className="text-500 w-6 md:w-2 font-medium">Days</div>
+                                        <div className="text-900 w-full md:w-8 md:flex-order-0 flex-order-1">{timeing.adverts_schedule_days.join(', ')}</div>
+                                    </li>
+                                    <li className="flex align-items-center py-3 px-2 border-top border=150 flex wrap">
+                                        <div className="text-500 w-6 md:w-2 font-medium">Start Date</div>
+                                        <div className="text-900 w-full md:w-8 md:flex-order-0 flex-order-1">{formatDate(selectedDataItem.adverts_start_time)}</div>
+                                    </li>
+                                    <li className="flex align-items-center py-3 px-2 border-top border=150 flex wrap">
+                                        <div className="text-500 w-6 md:w-2 font-medium">End Date</div>
+                                        <div className="text-900 w-full md:w-8 md:flex-order-0 flex-order-1">{formatDate(selectedDataItem.adverts_end_time)}</div>
+                                    </li>
+                                </div>
+                            ))}
+                        </ul>
 
-                </div>
-                <p>
-                  Start Date: {formatDate(selectedDataItem.adverts_start_time)}
-                  <br />
-                  End Date: {formatDate(selectedDataItem.adverts_end_time)}
-                </p>
+                    </div>
+               
                 <div>
                   <FullCalendar
                     plugins={[timeGridPlugin]}
