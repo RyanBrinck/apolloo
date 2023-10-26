@@ -18,14 +18,19 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from '@fullcalendar/timegrid';
 import { EventInput } from '@fullcalendar/core';
-
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import Accordion from '@mui/material/Accordion';
+import AccordionSummary from '@mui/material/AccordionSummary';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import { Fieldset } from 'primereact/fieldset';
 
 
 interface DataItem {
   adverts_id?: number;
-  adverts_type?: number;
   adverts_name?: string;
   playlist_name?: string;
+  adverts_type?: number;
+
   adverts_start_time?: string;
   adverts_end_time?: string;
   adverts_file_name?: string;
@@ -33,8 +38,13 @@ interface DataItem {
   advert_playlist_id?: number; // Add this property if it's expected to exist
   timeings?: Timeing[]; // Add the timeings array
   Adverts?: DataItem[]; // Assuming 'Adverts' is an array of 'DataItem'
+  adverts_vid_width: number;
+  adverts_vid_height: number;
   mute_audio: number;
   audio_volume: number;
+  start_date?: string;
+  end_date?: string;
+
   // ... add other properties as needed
 }
 
@@ -51,6 +61,25 @@ interface ApiResponse {
   error: boolean;
   errorMsg: string;
   data: any; // Replace 'any' with the actual type of your JSON data
+}
+
+function Clock() {
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Update the current time every second
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, []);
+
+  const formattedTime = currentTime.toLocaleTimeString();
+
+  return <span>{formattedTime}</span>;
 }
 
 function App() {
@@ -72,49 +101,12 @@ function App() {
   const [advertSidebarVisible, setAdvertSidebarVisible] = useState(false);
   const [selectedPlaylistData, setSelectedPlaylistData] = useState<DataItem | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [isScreenDimmed, setIsScreenDimmed] = useState(false);
+  const [accordionExpanded, setAccordionExpanded] = useState(false);
+  const daysOfWeekAbbreviations = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-  const goBackToPreviousOverlay = () => {
-    if (overlayHistory.length > 1) {
-      const updatedHistory = [...overlayHistory];
-      updatedHistory.pop(); // Remove the current overlay from history
-      setOverlayHistory(updatedHistory);
-
-      // Set the selected data item to the previous overlay's data
-      const previousDataItem = updatedHistory[updatedHistory.length - 1];
-      setSelectedDataItem(previousDataItem);
-
-      // Check if the current item type is "advert"
-      if (selectedItemType === "advert") {
-        // Find the parent playlist data
-        const parentPlaylistData = responseData.data.data.data.find(
-          (item: any) =>
-            item.advert_playlist_id === previousDataItem.advert_playlist_id
-        );
-
-        if (parentPlaylistData) {
-          // Update the current item type to "playlist"
-          setSelectedItemType("playlist");
-
-          // Open the parent playlist
-          setSelectedDataItem(parentPlaylistData);
-          setSidebarVisible(true); // Show the sidebar for the playlist
-        } else {
-          // No parent playlist found, so close all overlays
-          setOverlayHistory([]);
-          setSidebarVisible(false);
-          setSelectedDataItem(null);
-        }
-      } else if (selectedItemType === "playlist") { //because if it is a playlist, means only 1 overlay opened. i.e. no playlist inside of playlist 
-        // Close the current playlist sidebar
-        setSidebarVisible(false);
-        setSelectedDataItem(null);
-      }
-    } else {
-      // No previous overlay, so close all overlays
-      setOverlayHistory([]);
-      setSidebarVisible(false);
-      setSelectedDataItem(null);
-    }
+  const handleAccordionChange = () => {
+    setAccordionExpanded(!accordionExpanded);
   };
 
   const calendarEvents: EventInput[] = [];
@@ -207,7 +199,7 @@ function App() {
         setShowControlDialog(true);
       } else if (e.key === 'B' || e.key === 'b') {
         // Handle the "b" key press by calling the goBackToPreviousOverlay function
-        goBackToPreviousOverlay();
+        closeSidebar();
       } else if (e.key === 'C' || e.key === 'c') {
         // Handle the "c" key press by calling the goBackToPreviousOverlay function
         closeAllSidebars();
@@ -226,17 +218,12 @@ function App() {
     axios.get(apiUrl)
       .then((response) => {
         const data = response.data;
-
-        //responseData.data.data.data.adverts_file_name_unique
-
         // Find the earliest start time and latest end time
         let earliestStart: Date | null = null;
         let latestEnd: Date | null = null;
         data.data.data.forEach((item: any) => {
           const startDate = item.adverts_start_time ? new Date(item.adverts_start_time) : null;
           const endDate = item.adverts_end_time ? new Date(item.adverts_end_time) : null;
-          // const tempStartDate = item.adverts_start_date ? new Date(item.adverts_start_date) : null;
-          // const tempEndDate = item.adverts_end_date ? new Date(item.adverts_end_date) : null;
 
           if (startDate && (!earliestStart || startDate < earliestStart)) {
             earliestStart = startDate;
@@ -246,6 +233,7 @@ function App() {
             latestEnd = endDate;
           }
         });
+
 
         // Set the state variables
         setEarliestStartTime(earliestStart);
@@ -309,7 +297,7 @@ function App() {
   const items = [
     {
       label: 'Calendar',
-      icon: <FontAwesomeIcon icon={faCalendarDays} />,
+      icon: <FontAwesomeIcon icon={faCalendarDays} style={{ fontSize: '2rem', marginRight: '0.5rem' }} />,
       command: () => {
         // Show the calendar when the calendar icon is clicked
         setDisplayCalendar(true);
@@ -317,7 +305,7 @@ function App() {
     },
     {
       label: 'Refresh',
-      icon: <FontAwesomeIcon icon={faRotateRight} />,
+      icon: <FontAwesomeIcon icon={faRotateRight} style={{ fontSize: '2rem', marginRight: '0.5rem' }} />,
       command: () => {
         // Refresh data when the refresh icon is clicked
         handleRefresh();
@@ -327,12 +315,16 @@ function App() {
   ];
 
   const end = (
-    <div>
-      <FontAwesomeIcon icon={faWifi} style={{ fontSize: '2rem', color: isConnected ? 'green' : 'red' }} /> {/* Use FontAwesomeIcon for Wifi */}
-      <FontAwesomeIcon icon={faBook} style={{ fontSize: '2rem', marginLeft: '1rem' }} onClick={() => setShowControlDialog(true)} /> {/* Use FontAwesomeIcon for Book */}
+    <div style={{ display: 'flex', alignItems: 'center' }}>
+      <div>
+        <FontAwesomeIcon icon={faWifi} style={{ fontSize: '2rem', color: isConnected ? 'green' : 'red' }} />
+        <FontAwesomeIcon icon={faBook} style={{ fontSize: '2rem', marginLeft: '1rem' }} onClick={() => setShowControlDialog(true)} />
+      </div>
+      <div style={{ fontSize: '1.5rem', marginLeft: '1rem' }}>
+        <Clock />
+      </div>
     </div>
   );
-
   const totalRefreshTime = responseData.data
     ? responseData.data.data.data.reduce(
       (sum: number, item: any) => sum + calculateRefreshTime(item),
@@ -360,12 +352,93 @@ function App() {
     const startDate = new Date(dataItem.adverts_start_time);
     const endDate = new Date(dataItem.adverts_end_time);
     const now = new Date();
-    if (startDate != null && endDate != null) {
+    if (dataItem.adverts_start_time != null && dataItem.adverts_end_time != null && dataItem.timeings && dataItem.timeings.length > 0) {
+      console.log("hello")
+      if (endDate >= now) {
+        if (startDate < now) {
+          // console.log(endDate)
+          // console.log(startDate)
 
-      if (startDate <= now && endDate >= now) {
-        // console.log(endDate)
-        // console.log(startDate)
-        if (dataItem.timeings && dataItem.timeings.length > 0) {
+          const currentTime = now.getHours() * 60 + now.getMinutes();
+          const currentDay = now.getDay();
+
+          dataItem.timeings.find((timeing: any) => {
+            // Convert the daysOfWeek array elements to integers
+            const daysOfWeek = timeing.adverts_schedule_days.map((day: string) => parseInt(day.trim(), 10));
+
+            // Check if the current day is in the specified daysOfWeek
+            if (daysOfWeek.includes(currentDay)) {
+              const startTime = timeing.adverts_schedule_starthour * 60 + timeing.adverts_schedule_startmin;
+              const endTime = timeing.adverts_schedule_endhour * 60 + timeing.adverts_schedule_endmin;
+
+              // Check if the current time falls within the specified time range
+              if ((currentTime >= startTime) && (currentTime <= endTime)) {
+                circleColor = "green";
+              } else if ((currentTime < startTime) || (currentTime > endTime)) {
+                circleColor = "orange";
+              } else {
+                circleColor = "red";
+              }
+            }
+          });
+        }
+        else {
+          circleColor = "orange";
+        }
+      }
+      else {
+        circleColor = "red";
+      }
+    } else {
+      circleColor = "green";
+    }
+
+    const handleAnchorKeyPress = (event: React.KeyboardEvent) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        openSidebar(dataItem);
+      }
+    };
+
+    return (
+      <a tabIndex={0} onKeyPress={handleAnchorKeyPress}>
+        <Card style={{ backgroundColor: '#111111', margin: 4, maxWidth: 312 }}>
+          <div className="card_container" onClick={() => openSidebar(dataItem)}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: "space-between" }}>
+              <Tag className="label" style={{
+                backgroundColor: dataItem.hasOwnProperty('adverts_id') ? '' : 'orange',
+                color: 'white',
+                marginRight: '8px', // Add some spacing between label and title
+              }}>
+                {dataItem.hasOwnProperty('adverts_id') ? 'Advert' : 'Playlist'}
+              </Tag>
+              <div className="title">
+                {dataItem.hasOwnProperty('adverts_name') ? dataItem.adverts_name : dataItem.playlist_name}
+              </div>
+              <FontAwesomeIcon icon={faCircle} style={{ color: circleColor }} />
+            </div>
+            <div className="time_card">
+              Run Time: {minutesToHHMM(calculateRefreshTime(dataItem))}
+            </div>
+          </div>
+        </Card>
+      </a>
+    );
+
+  }
+
+  const playlistItemTemplate = (dataItem: any) => {
+    let circleColor = 'gray'; // Default to gray
+    const startDate = new Date(dataItem.adverts_start_time);
+    const endDate = new Date(dataItem.adverts_end_time);
+    const now = new Date();
+    console.log(dataItem.adverts_start_time)
+    if (dataItem.adverts_start_time != null && dataItem.adverts_end_time != null && dataItem.timeings && dataItem.timeings.length > 0) {
+      console.log("hello")
+      if (endDate >= now) {
+        if (startDate < now) {
+          // console.log(endDate)
+          // console.log(startDate)
 
           const currentTime = now.getHours() * 60 + now.getMinutes();
           const currentDay = now.getDay();
@@ -390,11 +463,17 @@ function App() {
             }
 
           });
+
+        }
+        else {
+          circleColor = "orange";
         }
       }
       else {
         circleColor = "red";
       }
+    } else {
+      circleColor = "green";
     }
 
     const handleAnchorKeyPress = (event: React.KeyboardEvent) => {
@@ -405,43 +484,26 @@ function App() {
     };
 
     return (
-      <a tabIndex={0} onKeyPress={handleAnchorKeyPress}>
-        <Card style={{ backgroundColor: '#111111', margin: 4, maxWidth: 312 }}>
-          <div className="card_container" onClick={() => openSidebar(dataItem)}>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <Tag className="label" style={{
-                backgroundColor: dataItem.hasOwnProperty('adverts_id') ? '' : 'orange',
-                color: 'white',
-                marginRight: '8px', // Add some spacing between label and title
-              }}>
-                {dataItem.hasOwnProperty('adverts_id') ? 'Advert' : 'Playlist'}
-              </Tag>
-              <div className="title">
-                {dataItem.hasOwnProperty('adverts_name') ? dataItem.adverts_name : dataItem.playlist_name}
-              </div>
-              <FontAwesomeIcon icon={faCircle} style={{ color: circleColor }} />
+      <a tabIndex={1} onKeyPress={handleAnchorKeyPress}>
+        <div className="card_container" onClick={() => openSidebar(dataItem)}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: "space-between" }}>
+            <Tag className="label" style={{
+              backgroundColor: dataItem.hasOwnProperty('adverts_id') ? '' : 'orange',
+              color: 'white',
+              marginRight: '8px', // Add some spacing between label and title
+            }}>
+              {dataItem.hasOwnProperty('adverts_id') ? 'Advert' : 'Playlist'}
+            </Tag>
+            <div className="title">
+              {dataItem.hasOwnProperty('adverts_name') ? dataItem.adverts_name : dataItem.playlist_name}
             </div>
-            <div className="time_card">
-              Run Time: {minutesToHHMM(calculateRefreshTime(dataItem))}
-            </div>
+            <FontAwesomeIcon icon={faCircle} style={{ color: circleColor }} />
           </div>
-        </Card>
-      </a>
-    );
-
-  }
-
-  const playlistItemTemplate = (dataItem: any) => {
-    return (
-      <div className="card_container" onClick={() => openSidebar(dataItem)}>
-        <div className="advert-title">{dataItem.adverts_name}</div>
-        <div className="advert-details">
-          {/* Render other advert details here */}
-          Start Time: {formatDate(dataItem.adverts_start_time)}<br />
-          End Time: {formatDate(dataItem.adverts_end_time)}
-          {/* Add more advert details as needed */}
+          <div className="time_card">
+            Run Time: {minutesToHHMM(calculateRefreshTime(dataItem))}
+          </div>
         </div>
-      </div>
+      </a>
     );
   }
 
@@ -590,15 +652,6 @@ function App() {
                     {JSON.stringify(responseData.data.data.profile.audio_volume, null, 2)}
                   </span>
                 </div>
-                {responseData.data.data.profile.dimmers && responseData.data.data.profile.dimmers.length > 0 ? (
-                  <a tabIndex={0}>
-                    <div className="info_card">
-                      <span className="bold_text">
-                        Dimmers
-                      </span>
-                    </div>
-                  </a>
-                ) : (<></>)}
               </div>
             </Card>
           </div>
@@ -644,8 +697,7 @@ function App() {
           inline
           style={{ width: "100rem" }}
           showWeek
-          numberOfMonths={3}
-
+          numberOfMonths={1}
         />
         <p>
           Start Date: {startDate ? startDate.toLocaleString() : 'N/A'}
@@ -683,78 +735,107 @@ function App() {
       >
         {selectedDataItem && (
           <div className="sidebar-content">
-            <p className="sidebar_title" >
-              {selectedDataItem.adverts_id ? selectedDataItem.adverts_name : selectedDataItem.playlist_name}
-            </p>
-            <div className="display_content">
-              {selectedDataItem.adverts_type !== 5 ? (
-                <Image
-                  src={`http://127.0.0.1:3000/api/getImage/${selectedDataItem.adverts_file_name_unique}`} // Replace with the actual URL or path to your images
-                // alt={selectedDataItem.adverts_name || selectedDataItem.playlist_name}
-
-                />
-              ) : (
-                <video autoPlay muted>
-                  <source
-                    src={`http://127.0.0.1:3000/api/getVideo/${selectedDataItem.adverts_file_name_unique}`} // Replace with the actual URL or path to your images
-                  // alt={selectedDataItem.adverts_name || selectedDataItem.playlist_name}
-                  />
-                </video>
-              )}
-            </div>
-            {selectedDataItem.timeings && selectedDataItem.timeings.length > 0 && (
-                <div className="surface-0 py-4 px-4">
-                    <div>
-                        <div className="font-medium text-3xl text-900 mb-3">Timings</div>
-                        <ul className="list-none p-0 m-0">
-                            {selectedDataItem.timeings.map((timeing: any, index: number) => (
-                                <div>
-                                    <li className="flex align-items-center py-3 px-2 border-top border=150 flex wrap" key={index}>
-                                        <div className="text-900 w-6 md:w-2 font-large">Schedule {index + 1}</div>
-                                    </li>
-                                    <li className="flex align-items-center py-3 px-2 border-top border=150 flex wrap">
-                                        <div className="text-500 w-6 md:w-2 font-medium">Start Time</div>
-                                        <div className="text-900 w-full md:w-8 md:flex-order-0 flex-order-1">{formatTime(timeing.adverts_schedule_starthour, timeing.adverts_schedule_startmin)}</div>
-                                    </li>
-                                    <li className="flex align-items-center py-3 px-2 border-top border=150 flex wrap">
-                                        <div className="text-500 w-6 md:w-2 font-medium">End Time</div>
-                                        <div className="text-900 w-full md:w-8 md:flex-order-0 flex-order-1">{formatTime(timeing.adverts_schedule_endhour, timeing.adverts_schedule_endmin)}</div>
-                                    </li>
-                                    <li className="flex align-items-center py-3 px-2 border-top border=150 flex wrap">
-                                        <div className="text-500 w-6 md:w-2 font-medium">Days</div>
-                                        <div className="text-900 w-full md:w-8 md:flex-order-0 flex-order-1">{timeing.adverts_schedule_days.join(', ')}</div>
-                                    </li>
-                                    <li className="flex align-items-center py-3 px-2 border-top border=150 flex wrap">
-                                        <div className="text-500 w-6 md:w-2 font-medium">Start Date</div>
-                                        <div className="text-900 w-full md:w-8 md:flex-order-0 flex-order-1">{formatDate(selectedDataItem.adverts_start_time)}</div>
-                                    </li>
-                                    <li className="flex align-items-center py-3 px-2 border-top border=150 flex wrap">
-                                        <div className="text-500 w-6 md:w-2 font-medium">End Date</div>
-                                        <div className="text-900 w-full md:w-8 md:flex-order-0 flex-order-1">{formatDate(selectedDataItem.adverts_end_time)}</div>
-                                    </li>
-                                </div>
-                            ))}
-                        </ul>
-
+            {selectedDataItem && (
+              <div className="sidebar-content">
+                {selectedDataItem.adverts_type == 1 ? (
+                  <Fieldset legend={selectedDataItem.adverts_id ? selectedDataItem.adverts_name : selectedDataItem.playlist_name}>
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                      <Image
+                        src={`http://127.0.0.1:3000/api/getImage/${selectedDataItem.adverts_file_name_unique}`}
+                        // alt={selectedDataItem.adverts_name || selectedDataItem.playlist_name}
+                        width="960" height="540"
+                      />
                     </div>
-               
-                <div>
-                  <FullCalendar
-                    plugins={[timeGridPlugin]}
-                    initialView="timeGridWeek"
-                    events={calendarEvents} // Wrap the single event in an array
-                    // eventBackgroundColor="red" // Set the default event background color
-                    // eventTextColor="white" // Set the default event text color
-                    allDaySlot={false} // Disable the "all day" slot
-                    initialDate={calendarEvents.length > 0 ? calendarEvents[0].start : new Date()} // Set initial date to the start date of the first event, or today's date if there are no events
-                  />
-                </div>
+                  </Fieldset>
+                ) : selectedDataItem.adverts_type == 5 ? (
+                  <Fieldset>
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                      <video controls
+                        ref={videoRef}
+                        width={selectedDataItem.adverts_vid_width ? selectedDataItem.adverts_vid_width / 2 : 960}
+                        height={selectedDataItem.adverts_vid_height ? selectedDataItem.adverts_vid_height / 2 : 540}
+                        autoPlay>
+                        <source
+                          src={`http://127.0.0.1:3000/api/getVideo/${selectedDataItem.adverts_file_name_unique}`}
+                        />
+                      </video>
+                    </div>
+                  </Fieldset>
+                ) : null}
               </div>
-            )}        
+            )}
+            {selectedDataItem.timeings && selectedDataItem.timeings.length > 0 && (
+              <Fieldset legend="Timings">
+                <div>
+                  <div>
+                    <div className="timing-cards-container" style={{ display: 'flex', flexWrap: 'wrap' }}>
+                      {selectedDataItem.timeings.map((timeing, index) => (
+                        <Card
+                          key={index}
+                          title={`Schedule ${index + 1}`}
+                          style={{ width: '300px', margin: '0.5rem' }}
+                          className="p-shadow-2"
+                        >
+                          <div>
+                            <strong>Start Time:</strong> {formatTime(timeing.adverts_schedule_starthour, timeing.adverts_schedule_startmin)}
+                          </div>
+                          <div>
+                            <strong>End Time:</strong> {formatTime(timeing.adverts_schedule_endhour, timeing.adverts_schedule_endmin)}
+                          </div>
+                          <div>
+                            <strong>Days:</strong>
+                            <div className="day-pills">
+                              {timeing.adverts_schedule_days.map((day, dayIndex) => (
+                                <div key={dayIndex} className="day-pill">{daysOfWeekAbbreviations[parseInt(day.trim())]}</div>
+                              ))}
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                  <p>
+                    Start Date: {formatDate(selectedDataItem.adverts_start_time)}
+                    <br />
+                    End Date: {formatDate(selectedDataItem.adverts_end_time)}
+                  </p>
+                  {selectedDataItem.adverts_start_time != null && selectedDataItem.adverts_end_time != null && (
+                    <div>
+                      <Accordion expanded={accordionExpanded} onChange={handleAccordionChange}>
+                        <AccordionSummary
+                          expandIcon={<ExpandMoreIcon />}
+                          aria-controls="calendar-content"
+                          id="calendar-header"
+                        ></AccordionSummary>
+                        <AccordionDetails>
+                          <div style={{ width: '100%' }}>
+                            <FullCalendar
+                              plugins={[timeGridPlugin]}
+                              initialView="timeGridWeek"
+                              events={calendarEvents} // Wrap the single event in an array
+                              // eventBackgroundColor="red" // Set the default event background color
+                              // eventTextColor="white" // Set the default event text color
+                              allDaySlot={false} // Disable the "all day" slot
+                              initialDate={calendarEvents.length > 0 ? calendarEvents[0].start : new Date()} // Set initial date to the start date of the first event, or today's date if there are no events
+                              views={{
+                                timeGridWeek: {
+                                  // Customize the date format in the month row (dayHeaderFormat)
+                                  dayHeaderFormat: { weekday: 'long', day: '2-digit', month: '2-digit' },
+                                },
+                              }}
+                            />
+                          </div>
+                        </AccordionDetails>
+                      </Accordion>
+                    </div>
+                  )}
+                </div>
+              </Fieldset>
+            )}
           </div>
         )}
-
       </Sidebar>
+
       <Sidebar
         id="playlistSidebar"
         className='sideBar'
@@ -763,16 +844,39 @@ function App() {
         onHide={() => setPlaylistSidebarVisible(false)} // Close the playlist sidebar
         style={{ height: '90vh' }}
       >
+
         {selectedPlaylistData && selectedPlaylistData.Adverts && (
-          // Render the sidebar for playlists
+
           <div className="sidebar-content">
-            <div>
-              Advert Playlist ID: {selectedPlaylistData.advert_playlist_id}
-            </div>
-            <div>
-              Playlist Name: {selectedPlaylistData.playlist_name}
-            </div>
-            {/* Find the selected playlist data */}
+            <Fieldset legend={selectedPlaylistData.playlist_name}>
+              <h2>
+                Advert Playlist ID: {selectedPlaylistData.advert_playlist_id}
+              </h2>
+            </Fieldset>
+            {selectedPlaylistData?.start_date != null && selectedPlaylistData?.end_date != null && (
+              <Fieldset legend="Calendar">
+                <div>
+                  <Calendar
+                    value={[
+                      new Date(selectedPlaylistData.start_date),
+                      new Date(selectedPlaylistData.end_date)
+                    ]}
+                    selectionMode="range"
+                    inline
+                    showWeek
+                    numberOfMonths={1}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      height: '100%',
+                    }}
+                  />
+
+                </div>
+              </Fieldset>
+            )}
             {(() => {
               if (
                 selectedPlaylistData.Adverts &&
@@ -780,25 +884,24 @@ function App() {
                 selectedPlaylistData.Adverts.length > 0
               ) {
                 return (
-                  <DataView
-                    value={selectedPlaylistData.Adverts} // Use the Adverts[] array of the selected playlist
-                    itemTemplate={playlistItemTemplate}
-                    style={{
-                      gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-                    }}
-                    className="p-dataview"
-                  />
+                  <Fieldset legend="Adverts">
+                    <DataView
+                      value={selectedPlaylistData.Adverts} // Use the Adverts[] array of the selected playlist
+                      itemTemplate={playlistItemTemplate}
+                      style={{
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                      }}
+                      className="p-dataview"
+                    />
+                  </Fieldset>
                 );
               } else {
                 return <p>No data available</p>;
               }
             })()}
-            {/* <button onClick={goBackToPreviousOverlay}>Back</button> */}
-
           </div>
         )}
       </Sidebar>
-
     </body>
   );
 }

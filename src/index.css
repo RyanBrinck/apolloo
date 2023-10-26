@@ -166,6 +166,21 @@ img {
   font-weight: bold;
 }
 
+.day-pills {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 5px;
+}
+
+.day-pill {
+  background-color: #007bff; /* Set your desired background color */
+  color: #fff; /* Set the text color */
+  border-radius: 15px; /* Adjust the border-radius for pill shape */
+  padding: 5px 10px; /* Adjust the padding for spacing inside the pills */
+  margin-right: 5px; /* Adjust margin between pills */
+  margin-bottom: 5px; /* Adjust margin between rows of pills */
+}
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
